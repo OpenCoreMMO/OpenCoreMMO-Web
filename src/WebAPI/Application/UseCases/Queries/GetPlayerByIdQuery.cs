@@ -1,0 +1,15 @@
+﻿using MediatR;
+using OCM.Application.Requests.Queries;
+using OCM.Application.Response.Player;
+using OCM.Infrastructure.Interfaces;
+
+namespace NeoServer.Web.API.Application.UseCases.Queries;
+
+public class GetPlayerByIdQuery(IPlayerRepository playerRepository)
+    : IRequestHandler<GetPlayerByIdRequest, PlayerResponseViewModel>
+{
+    public async Task<PlayerResponseViewModel> Handle(GetPlayerByIdRequest request, CancellationToken cancellationToken)
+    {
+        return await playerRepository.GetAsync(request.Id);
+    }
+}
