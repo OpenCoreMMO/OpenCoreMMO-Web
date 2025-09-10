@@ -59,7 +59,10 @@ public class PlayerRepository : BaseRepository<PlayerEntity>, IPlayerRepository
     public async Task<PlayerEntity> GetById(int id)
     {
         await using var context = NewDbContext;
-        return await context.Players.FirstOrDefaultAsync(x => x.Id == id);
+        return await context.Players
+            .Include(p => p.World)
+            .Include(p => p.Town)
+            .FirstOrDefaultAsync(x => x.Id == id);
     }
 
 
