@@ -8,6 +8,7 @@
 @using MudBlazor
 @inject IMediator Mediator
 @inject ISnackbar Snackbar
+@inject IDialogService DialogService
 
 <MudGrid>
     <!-- Characters Table -->
@@ -96,6 +97,10 @@
             <MudButton Class="mt-6" Variant="Variant.Filled" Color="Color.Primary" FullWidth="true"
                        OnClick="SaveChanges">
                 Save editions
+            </MudButton>
+            <MudButton Class="mt-2" Variant="Variant.Filled" Color="Color.Error" FullWidth="true"
+                       OnClick="BanAccount">
+                Ban Account
             </MudButton>
         </MudPaper>
     </MudItem>
@@ -186,6 +191,35 @@
         else
         {
             Snackbar.Add($"Error updating account: {response.ErrorMessage}", Severity.Error);
+        }
+    }
+
+    private async Task BanAccount()
+    {
+        var result = await DialogService.ShowMessageBox(
+            "Confirm Ban",
+            "Are you sure you want to ban this account?",
+            yesText: "Ban",
+            cancelText: "Cancel");
+
+        if (result == true)
+        {
+            var banRequest = new BanAccountRequest();
+            banRequest.SetAccountId(AccountId);
+            banRequest.Reason = "Banned by admin";
+            banRequest.Days = 7;
+
+            var response = await Mediator.Send(banRequest);
+
+            if (response.IsSuccess)
+            {
+                Snackbar.Add("Account banned successfully!", Severity.Success);
+                await LoadAccount();
+            }
+            else
+            {
+                Snackbar.Add($"Error banning account: {response.ErrorMessage}", Severity.Error);
+            }
         }
     }
 }

@@ -1,5 +1,6 @@
 @page "/accounts"
 @using OCM.Application.Requests.Queries
+@using OCM.Application.Requests.Commands
 @using OCM.Application.Response.Account
 @using MediatR
 @using MudBlazor
@@ -9,7 +10,7 @@
         <MudText Typo="Typo.h6">Accounts</MudText>
         <MudText Typo="Typo.subtitle2" Color="Color.Secondary">List of all created accounts</MudText>
     </div>
-    <MudTable T="AccountResponseViewModel" ServerData="ServerReload" Dense="true" Hover="true" Bordered="false" Class="mt-4">
+    <MudTable T="AccountResponseViewModel" @key="reloadKey" ServerData="ServerReload" Dense="true" Hover="true" Bordered="false" Class="mt-4">
         <HeaderContent>
             <MudTh>#</MudTh>
             <MudTh>Name</MudTh>
@@ -25,10 +26,27 @@
                 <MudChip T="string" Color="Color.Success" Variant="Variant.Filled" Class="mr-2">Premium Account
                 </MudChip>
                 <MudChip T="string" Color="Color.Warning" Variant="Variant.Outlined">Coins: @context.Coins</MudChip>
+                @if (context.BanishedAt.HasValue)
+                {
+                    <MudChip T="string" Color="Color.Error" Variant="Variant.Filled" Class="mr-2">Banned</MudChip>
+                }
             </MudTd>
             <MudTd align="right">
-                <MudIconButton Href="@($"/accounts/{context.Id}")" Icon="@Icons.Material.Filled.Visibility"
-                               Color="Color.Primary"/>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mr-2" Href="@($"/accounts/{context.Id}")">
+                    Edit
+                </MudButton>
+                @if (context.BanishedAt.HasValue)
+                {
+                    <MudButton Variant="Variant.Filled" Color="Color.Warning" OnClick="() => UnbanAccount(context.Id)">
+                        Unban
+                    </MudButton>
+                }
+                else
+                {
+                    <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="() => BanAccount(context.Id)">
+                        Ban
+                    </MudButton>
+                }
             </MudTd>
         </RowTemplate>
     <PagerContent>
@@ -40,12 +58,74 @@
 @code {
 
     [Inject] private IMediator Mediator { get; set; }
+    [Inject] private IDialogService DialogService { get; set; }
+    [Inject] private ISnackbar Snackbar { get; set; }
+
+    private int reloadKey = 0;
 
     private async Task<TableData<AccountResponseViewModel>> ServerReload(TableState state, CancellationToken token)
     {
         var request = new GetAccountsRequest { Page = state.Page + 1, Limit = state.PageSize };
         var response = await Mediator.Send(request, token);
         return new TableData<AccountResponseViewModel> { TotalItems = response.TotalRecords, Items = response.Data };
+    }
+
+    private async Task BanAccount(int accountId)
+    {
+        var result = await DialogService.ShowMessageBox(
+            "Confirm Ban",
+            "Are you sure you want to ban this account?",
+            yesText: "Ban",
+            cancelText: "Cancel");
+
+        if (result == true)
+        {
+            var banRequest = new BanAccountRequest();
+            banRequest.SetAccountId(accountId);
+            banRequest.Reason = "Banned by admin";
+            banRequest.Days = 7;
+
+            var response = await Mediator.Send(banRequest);
+
+            if (response.IsSuccess)
+            {
+                Snackbar.Add("Account banned successfully!", Severity.Success);
+                reloadKey++;
+                StateHasChanged();
+            }
+            else
+            {
+                Snackbar.Add($"Error banning account: {response.ErrorMessage}", Severity.Error);
+            }
+        }
+    }
+
+    private async Task UnbanAccount(int accountId)
+    {
+        var result = await DialogService.ShowMessageBox(
+            "Confirm Unban",
+            "Are you sure you want to unban this account?",
+            yesText: "Unban",
+            cancelText: "Cancel");
+
+        if (result == true)
+        {
+            var unbanRequest = new UnbanAccountRequest();
+            unbanRequest.SetAccountId(accountId);
+
+            var response = await Mediator.Send(unbanRequest);
+
+            if (response.IsSuccess)
+            {
+                Snackbar.Add("Account unbanned successfully!", Severity.Success);
+                reloadKey++;
+                StateHasChanged();
+            }
+            else
+            {
+                Snackbar.Add($"Error unbanning account: {response.ErrorMessage}", Severity.Error);
+            }
+        }
     }
 
 }
