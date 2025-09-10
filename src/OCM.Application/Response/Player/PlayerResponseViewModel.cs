@@ -62,8 +62,138 @@ public class PlayerResponseViewModel
     public FightMode FightMode { get; set; }
     public Gender Gender { get; set; }
     public byte Vocation { get; set; }
+    public string VocationName { get; set; }
     public int RemainingRecoverySeconds { get; set; }
+    public int HealthPercentage { get; set; }
+    public int ManaPercentage { get; set; }
+    public int LevelPercentage { get; set; }
+    public ulong Balance { get; set; }
+    public string GroupName { get; set; }
+    public string Sex { get; set; }
+    public string WorldName { get; set; }
+    public string TownName { get; set; }
+    public string DailyReward { get; set; }
+    public string Tutorial { get; set; }
+    public string Blessings { get; set; }
     public int WorldId { get; set; }
+    public long ExperienceToNextLevel { get; set; }
+
+    private static string GetVocationName(byte vocation)
+    {
+        return vocation switch
+        {
+            0 => "None",
+            1 => "Sorcerer",
+            2 => "Druid",
+            3 => "Paladin",
+            4 => "Knight",
+            5 => "Master Sorcerer",
+            6 => "Elder Druid",
+            7 => "Royal Paladin",
+            8 => "Elite Knight",
+            9 => "Sorcerer",
+            10 => "Druid",
+            11 => "Paladin",
+            _ => "Unknown"
+        };
+    }
+
+    private static string GetGroupName(byte group)
+    {
+        return group switch
+        {
+            1 => "Player",
+            2 => "Tutor",
+            3 => "Senior Tutor",
+            4 => "Gamemaster",
+            5 => "Community Manager",
+            6 => "God",
+            _ => "Unknown"
+        };
+    }
+
+    private static string GetSexName(Gender gender)
+    {
+        return gender switch
+        {
+            Gender.Male => "Male",
+            Gender.Female => "Female",
+            _ => "Unknown"
+        };
+    }
+
+    private static int CalculateHealthPercentage(uint health, uint maxHealth)
+    {
+        return maxHealth == 0 ? 0 : (int)((double)health / maxHealth * 100);
+    }
+
+    private static int CalculateManaPercentage(uint mana, uint maxMana)
+    {
+        return maxMana == 0 ? 0 : (int)((double)mana / maxMana * 100);
+    }
+
+    private static int CalculateLevelPercentage(double experience, ushort level)
+    {
+        // Calculate experience needed for current level
+        long expForCurrentLevel = CalculateExperienceForLevel(level);
+
+        // If player has less experience than needed for current level,
+        // treat them as if they're progressing from level 1
+        if (experience < expForCurrentLevel)
+        {
+            // Use level 1 as baseline
+            expForCurrentLevel = 0;
+            level = 1;
+        }
+
+        // Calculate experience needed for next level
+        long expForNextLevel = CalculateExperienceForLevel(level + 1);
+
+        // Calculate progress percentage
+        double expInCurrentLevel = experience - expForCurrentLevel;
+        double expNeededForNextLevel = expForNextLevel - expForCurrentLevel;
+
+        if (expNeededForNextLevel <= 0) return 100;
+
+        double percentage = (expInCurrentLevel / expNeededForNextLevel) * 100;
+
+        // Ensure percentage is within valid range
+        if (percentage < 0) return 0;
+        if (percentage > 100) return 100;
+
+        return (int)percentage;
+    }
+
+    private static long CalculateExperienceForLevel(int level)
+    {
+        if (level <= 1) return 0;
+
+        // Exp(Level) = (50 × (Level³ - Level)) / 3
+        long levelCubed = (long)level * level * level;
+        return (50 * (levelCubed - level)) / 3;
+    }
+
+    private static long CalculateExperienceToNextLevel(double experience, ushort level)
+    {
+        // Calculate experience needed for current level
+        long expForCurrentLevel = CalculateExperienceForLevel(level);
+
+        // If player has less experience than needed for current level,
+        // treat them as level 1
+        if (experience < expForCurrentLevel)
+        {
+            return CalculateExperienceForLevel(2) - (long)experience;
+        }
+
+        // Calculate experience needed for next level based on current level
+        long expForNextLevel = CalculateExperienceForLevel(level + 1);
+
+        // Calculate remaining experience needed
+        long remaining = expForNextLevel - (long)experience;
+
+        // If remaining is negative (player has more exp than needed), return 0
+        return remaining > 0 ? remaining : 0;
+    }
 
     public static implicit operator PlayerResponseViewModel(PlayerEntity entity)
     {
@@ -100,32 +230,49 @@ public class PlayerResponseViewModel
                 PosZ = entity.PosZ,
 
                 SkillFist = entity.SkillFist,
-                SkillFistTries = entity.SkillFist,
+                SkillFistTries = entity.SkillFistTries,
 
                 SkillClub = entity.SkillClub,
-                SkillClubTries = entity.SkillClub,
+                SkillClubTries = entity.SkillClubTries,
 
                 SkillSword = entity.SkillSword,
-                SkillSwordTries = entity.SkillSword,
+                SkillSwordTries = entity.SkillSwordTries,
 
                 SkillAxe = entity.SkillAxe,
-                SkillAxeTries = entity.SkillAxe,
+                SkillAxeTries = entity.SkillAxeTries,
 
                 SkillDist = entity.SkillDist,
-                SkillDistTries = entity.SkillDist,
+                SkillDistTries = entity.SkillDistTries,
 
                 SkillShielding = entity.SkillShielding,
-                SkillShieldingTries = entity.SkillShielding,
+                SkillShieldingTries = entity.SkillShieldingTries,
 
                 SkillFishing = entity.SkillFishing,
-                SkillFishingTries = entity.SkillFishing,
+                SkillFishingTries = entity.SkillFishingTries,
 
                 MagicLevel = entity.MagicLevel,
-                MagicLevelTries = entity.MagicLevel,
+                MagicLevelTries = entity.MagicLevelTries,
 
                 Experience = entity.Experience,
                 ChaseMode = entity.ChaseMode,
-                FightMode = entity.FightMode
+                FightMode = entity.FightMode,
+                Gender = entity.Gender,
+                Vocation = entity.Vocation,
+                VocationName = GetVocationName(entity.Vocation),
+                RemainingRecoverySeconds = entity.RemainingRecoverySeconds,
+                WorldId = entity.WorldId,
+                HealthPercentage = CalculateHealthPercentage(entity.Health, entity.MaxHealth),
+                ManaPercentage = CalculateManaPercentage(entity.Mana, entity.MaxMana),
+                LevelPercentage = CalculateLevelPercentage(entity.Experience, entity.Level),
+                Balance = entity.BankAmount,
+                GroupName = GetGroupName(entity.Group),
+                Sex = GetSexName(entity.Gender),
+                WorldName = entity.World?.Name ?? "Unknown",
+                TownName = entity.Town?.Name ?? "Unknown",
+                DailyReward = "Open", // Mock
+                Tutorial = "x", // Mock
+                Blessings = "Access edit", // Mock
+                ExperienceToNextLevel = CalculateExperienceToNextLevel(entity.Experience, entity.Level)
             };
     }
 }

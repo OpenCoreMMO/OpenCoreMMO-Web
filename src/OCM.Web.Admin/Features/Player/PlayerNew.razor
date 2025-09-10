@@ -1,0 +1,270 @@
+@page "/players/new"
+@using MediatR
+@using OCM.Application.Requests.Commands
+@using OCM.Application.Requests.Queries
+@using OCM.Application.Response
+@using OCM.Application.Response.Account
+@using OCM.Application.Response.World
+@using OCM.Application.Response.Town
+@using MudBlazor
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject NavigationManager NavigationManager
+
+<MudBreadcrumbs Class="px-4 pt-4">
+    <MudBreadcrumbsItem Href="/" Icon="@Icons.Material.Filled.Home">Home</MudBreadcrumbsItem>
+    @if (AccountId.HasValue)
+    {
+        <MudBreadcrumbsItem Href="/accounts">Accounts</MudBreadcrumbsItem>
+        <MudBreadcrumbsItem Href="@($"/accounts/{AccountId}")">Account @AccountId</MudBreadcrumbsItem>
+    }
+    else
+    {
+        <MudBreadcrumbsItem Href="/players">Players</MudBreadcrumbsItem>
+    }
+    <MudBreadcrumbsItem>New Player</MudBreadcrumbsItem>
+</MudBreadcrumbs>
+
+<MudPaper Class="pa-6 mx-auto mt-4">
+    <div Class="mb-6">
+        <MudText Typo="Typo.h6">Create New Player</MudText>
+        <MudText Typo="Typo.subtitle2" Color="Color.Secondary">Fill in the details to create a new player character</MudText>
+    </div>
+
+    <MudGrid>
+        <MudItem xs="12" sm="6">
+            <MudTextField Label="Name" @bind-Value="Player.Name" Variant="Variant.Outlined" Required="true"/>
+        </MudItem>
+
+        <MudItem xs="12" sm="6">
+            <MudSelect T="int" Label="Vocation" @bind-Value="Player.Vocation" Variant="Variant.Outlined" Required="true">
+                @foreach (var vocation in VocationOptions)
+                {
+                    <MudSelectItem Value="@vocation.Id">@vocation.Name</MudSelectItem>
+                }
+            </MudSelect>
+        </MudItem>
+
+        <MudItem xs="6" sm="3">
+            <MudTextField Label="Level" @bind-Value="Player.Level" Variant="Variant.Outlined" Required="true"/>
+        </MudItem>
+
+        <MudItem xs="6" sm="3">
+            <MudSelect T="int" Label="Sex" @bind-Value="Player.Sex" Variant="Variant.Outlined">
+                <MudSelectItem Value="1">Male</MudSelectItem>
+                <MudSelectItem Value="0">Female</MudSelectItem>
+            </MudSelect>
+        </MudItem>
+
+        <MudItem xs="12" sm="6">
+            <MudSelect T="string" Label="World" Value="@SelectedWorldName" ValueChanged="OnWorldChanged" Variant="Variant.Outlined">
+                @foreach (var world in Worlds)
+                {
+                    <MudSelectItem Value="@world.Name">@world.Name</MudSelectItem>
+                }
+            </MudSelect>
+        </MudItem>
+
+        <MudItem xs="12" sm="6">
+            <MudSelect T="int" Label="Town" @bind-Value="Player.Town" Variant="Variant.Outlined" Disabled="@(Towns.Count == 0)">
+                @if (Towns.Count == 0)
+                {
+                    <MudSelectItem Value="0">Select a world first</MudSelectItem>
+                }
+                else
+                {
+                    @foreach (var town in Towns)
+                    {
+                        <MudSelectItem Value="@town.Id">@town.Name</MudSelectItem>
+                    }
+                }
+            </MudSelect>
+        </MudItem>
+
+        <MudItem xs="12" sm="6">
+            <MudTextField Label="Bank Amount" @bind-Value="Player.BankAmount" Variant="Variant.Outlined"/>
+        </MudItem>
+
+    </MudGrid>
+
+    <MudDivider Class="my-6"/>
+
+    <div Class="d-flex justify-end gap-2">
+        <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="Cancel">
+            Cancel
+        </MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CreatePlayer">
+            Create Player
+        </MudButton>
+    </div>
+</MudPaper>
+
+@code {
+    [Parameter] [SupplyParameterFromQuery] public int? AccountId { get; set; }
+
+    private PlayerCreateViewModel Player { get; set; } = new();
+    private List<WorldResponseViewModel> Worlds { get; set; } = new();
+    private List<TownResponseViewModel> Towns { get; set; } = new();
+    private int? SelectedWorldId { get; set; }
+    private string SelectedWorldName { get; set; }
+
+    readonly List<VocationOption> VocationOptions = new()
+    {
+        new VocationOption { Id = 1, Name = "Sorcerer", Description = "a sorcerer" },
+        new VocationOption { Id = 2, Name = "Druid", Description = "a druid" },
+        new VocationOption { Id = 3, Name = "Paladin", Description = "a paladin" },
+        new VocationOption { Id = 4, Name = "Knight", Description = "a knight" },
+        new VocationOption { Id = 5, Name = "Master Sorcerer", Description = "a master sorcerer" },
+        new VocationOption { Id = 6, Name = "Elder Druid", Description = "an elder druid" },
+        new VocationOption { Id = 7, Name = "Royal Paladin", Description = "a royal paladin" },
+        new VocationOption { Id = 8, Name = "Elite Knight", Description = "an elite knight" },
+        new VocationOption { Id = 9, Name = "Tutor", Description = "a tutor" },
+        new VocationOption { Id = 10, Name = "Game Master", Description = "a Game Master" },
+        new VocationOption { Id = 11, Name = "GOD", Description = "GOD" }
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadWorlds();
+    }
+
+    private async Task LoadWorlds()
+    {
+        var request = new GetWorldsRequest
+        {
+            Page = 1,
+            Limit = 100 // Load all worlds for the dropdown
+        };
+
+        var response = await Mediator.Send(request);
+        Worlds = response.Data.ToList();
+    }
+
+    private async Task LoadTowns(int? worldId)
+    {
+        if (worldId.HasValue)
+        {
+            var request = new GetTownsRequest
+            {
+                WorldId = worldId.Value,
+                Page = 1,
+                Limit = 100 // Load all towns for the selected world
+            };
+
+            var response = await Mediator.Send(request);
+            Towns = response.Data.ToList();
+        }
+        else
+        {
+            Towns = new List<TownResponseViewModel>();
+        }
+    }
+
+    private async Task OnWorldChanged(string worldName)
+    {
+        SelectedWorldName = worldName;
+
+        var selectedWorld = Worlds.FirstOrDefault(w => w.Name == worldName);
+        SelectedWorldId = selectedWorld?.Id;
+        Player.WorldId = selectedWorld?.Id ?? 0;
+        await LoadTowns(SelectedWorldId);
+
+        // Clear town selection if world changed
+        if (string.IsNullOrEmpty(worldName))
+        {
+            Player.Town = 0;
+        }
+    }
+
+
+    private async Task CreatePlayer()
+    {
+        try
+        {
+            // Set default position coordinates (you may want to get these from town data)
+            Player.PosX = 100;
+            Player.PosY = 100;
+            Player.PosZ = 7;
+
+            // Set account ID from query parameter
+            Player.AccountId = AccountId ?? 0;
+
+            var request = new CreatePlayerRequest
+            {
+                Name = Player.Name,
+                Sex = Player.Sex,
+                Vocation = Player.Vocation,
+                Level = Player.Level,
+                Town = Player.Town,
+                AccountId = Player.AccountId,
+                WorldId = Player.WorldId,
+                PosX = Player.PosX,
+                PosY = Player.PosY,
+                PosZ = Player.PosZ,
+                BankAmount = Player.BankAmount
+            };
+
+            var response = await Mediator.Send(request);
+
+            if (response.IsSuccess)
+            {
+                Snackbar.Add($"Player '{Player.Name}' created successfully!", Severity.Success);
+
+                // Navigate to account view if AccountId is available, otherwise to players list
+                if (AccountId.HasValue)
+                {
+                    NavigationManager.NavigateTo($"/accounts/{AccountId}");
+                }
+                else
+                {
+                    NavigationManager.NavigateTo("/players");
+                }
+            }
+            else
+            {
+                Snackbar.Add($"Failed to create player: {response.ErrorMessage}", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error creating player: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private void Cancel()
+    {
+        // Navigate to account view if AccountId is available, otherwise to players list
+        if (AccountId.HasValue)
+        {
+            NavigationManager.NavigateTo($"/accounts/{AccountId}");
+        }
+        else
+        {
+            NavigationManager.NavigateTo("/players");
+        }
+    }
+
+    public class PlayerCreateViewModel
+    {
+        public string Name { get; set; }
+        public int Sex { get; set; } = 1; // Default to Male (1)
+        public int Vocation { get; set; } = 1; // Default to Sorcerer (ID 1)
+        public int Level { get; set; } = 1; // Default level
+        public int Town { get; set; }
+        public int AccountId { get; set; }
+        public int WorldId { get; set; }
+        public int PosX { get; set; }
+        public int PosY { get; set; }
+        public int PosZ { get; set; }
+        public ulong BankAmount { get; set; }
+    }
+
+    public class VocationOption
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public string Description { get; set; }
+    }
+
+}

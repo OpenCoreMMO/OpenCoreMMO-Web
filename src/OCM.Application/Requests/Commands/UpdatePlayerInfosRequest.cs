@@ -24,6 +24,8 @@ public class UpdatePlayerInfosRequest : IRequest<OutputResponse>, ICommandBase
     public Gender Gender { get; set; }
     public byte Vocation { get; set; }
     public int WorldId { get; set; }
+    public double Experience { get; set; }
+    public ulong BankAmount { get; set; }
 
     public void SetPlayerId(int id)
     {

@@ -10,6 +10,6 @@ public class GetPlayerByIdQuery(IPlayerRepository playerRepository)
 {
     public async Task<PlayerResponseViewModel> Handle(GetPlayerByIdRequest request, CancellationToken cancellationToken)
     {
-        return await playerRepository.GetAsync(request.Id);
+        return await playerRepository.GetById(request.Id);
     }
 }

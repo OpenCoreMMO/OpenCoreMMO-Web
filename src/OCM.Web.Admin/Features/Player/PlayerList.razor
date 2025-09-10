@@ -9,18 +9,13 @@
 
 @rendermode @(new InteractiveServerRenderMode(false))
 
-<PageTitle>Players</PageTitle>
-
 @if (Players?.Data is not null)
 {
-    <MudButton Color="@Color.Success" Class="add-item-btn">Add Player</MudButton>
-    <br/>
     <MudTable Items="Players?.Data" RowsPerPage="5" Bordered="true" Hover="true" Elevation="3">
         <ToolBarContent>
-            <MudText Typo="Typo.h6">Players</MudText>
-            <br/>
             <div>
-                <MudText Typo="Typo.subtitle1" Color="Color.Secondary">List of all created players</MudText>
+                <MudText Typo="Typo.h6">Players</MudText>
+                <MudText Typo="Typo.subtitle2" Color="Color.Secondary">List of all created players</MudText>
             </div>
         </ToolBarContent>
         <HeaderContent>
@@ -46,9 +41,6 @@
             <MudTd>
                 <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="@($"Player/{context.Id}")">
                     Edit
-                </MudButton>
-                <MudButton Variant="Variant.Filled" Color="Color.Error">
-                    Ban
                 </MudButton>
                 <MudButton Variant="Variant.Filled" Color="Color.Warning">
                     Logout

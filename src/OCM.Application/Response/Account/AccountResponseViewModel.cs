@@ -12,6 +12,10 @@ public class AccountResponseViewModel
     public int Type { get; set; }
     public int PremiumDays { get; set; }
     public int Coins { get; set; }
+    public DateTime? BanishedAt { get; set; }
+    public DateTime? BanishedEndAt { get; set; }
+    public string BanishmentReason { get; set; }
+    public uint? BannedBy { get; set; }
 
     public static implicit operator AccountResponseViewModel(AccountEntity entity)
     {
@@ -27,7 +31,11 @@ public class AccountResponseViewModel
                 PremiumDays = entity.PremiumTimeEndAt.HasValue
                     ? (int)(entity.PremiumTimeEndAt.Value - DateTime.Now).TotalDays
                     : 0,
-                Coins = entity.Coins
+                Coins = entity.Coins,
+                BanishedAt = entity.BanishedAt,
+                BanishedEndAt = entity.BanishedEndAt,
+                BanishmentReason = entity.BanishmentReason,
+                BannedBy = entity.BannedBy
             };
     }
 }

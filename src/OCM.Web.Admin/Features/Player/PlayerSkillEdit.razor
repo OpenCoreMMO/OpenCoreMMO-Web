@@ -1,3 +1,7 @@
+@using MediatR
+@using OCM.Application.Requests.Commands
+@inject IMediator Mediator
+
 <MudDialog>
     <DialogContent>
         <MudText Typo="Typo.h5" Align="Align.Center" Class="mb-4">Edit Skills</MudText>
@@ -41,11 +45,32 @@
 @code {
     [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
 
+    [Parameter] public int PlayerId { get; set; }
     [Parameter] public PlayerSkillEditViewModel Skill { get; set; } = new();
 
-    void Submit()
+    async Task Submit()
     {
-        MudDialog.Close(DialogResult.Ok(Skill));
+        var request = new UpdatePlayerSkillsRequest();
+        request.SetPlayerId(PlayerId);
+        request.SkillMagicLevel = Skill.MagicLevel;
+        request.SkillFist = Skill.Fist;
+        request.SkillClub = Skill.Club;
+        request.SkillSword = Skill.Sword;
+        request.SkillAxe = Skill.Axe;
+        request.SkillDist = Skill.Distance;
+        request.SkillShielding = Skill.Shielding;
+        request.SkillFishing = Skill.Fishing;
+
+        var response = await Mediator.Send(request);
+
+        if (response.IsSuccess)
+        {
+            MudDialog.Close(DialogResult.Ok(Skill));
+        }
+        else
+        {
+            MudDialog.Close(DialogResult.Cancel());
+        }
     }
 
     void Cancel()

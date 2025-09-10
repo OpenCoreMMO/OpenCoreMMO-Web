@@ -8,14 +8,22 @@
 @using MudBlazor
 @inject IMediator Mediator
 @inject ISnackbar Snackbar
+@inject IDialogService DialogService
 
 <MudGrid>
     <!-- Characters Table -->
     <MudItem xs="12" md="8">
         <MudPaper>
             <div Class="pa-6">
-                <MudText Typo="Typo.h6">Characters</MudText>
-                <MudText Typo="Typo.subtitle2" Color="Color.Secondary">List of all characters on the account</MudText>
+                <div Class="d-flex justify-space-between align-center mb-4">
+                    <div>
+                        <MudText Typo="Typo.h6">Characters</MudText>
+                        <MudText Typo="Typo.subtitle2" Color="Color.Secondary">List of all characters on the account</MudText>
+                    </div>
+                    <MudButton Variant="Variant.Filled" Color="Color.Success" Href="@($"/players/new?accountId={AccountId}")">
+                        New Player
+                    </MudButton>
+                </div>
             </div>
 
             <MudTable T="PlayerResponseViewModel" ServerData="ServerReload" Dense="true" Hover="true" Class="mt-4">
@@ -29,7 +37,7 @@
                 </HeaderContent>
                 <RowTemplate>
                     <MudTd>
-                        <MudAvatar Size="Size.Medium" Image="_content/MudBlazor.WebAssembly/images/avatars/avatar1.png"/>
+                        <MudAvatar Size="Size.Medium">@(context.Name.Length >= 2 ? context.Name.Substring(0, 2).ToUpper() : context.Name.ToUpper())</MudAvatar>
                     </MudTd>
                     <MudTd>
                         <div>@context.Name</div>
@@ -43,7 +51,7 @@
                         </MudChip>
                     </MudTd>
                     <MudTd align="right">
-                        <MudIconButton Icon="@Icons.Material.Filled.Visibility" Color="Color.Primary"/>
+                        <MudIconButton Icon="@Icons.Material.Filled.Visibility" Color="Color.Primary" Href="@($"/player/{context.Id}")"/>
                     </MudTd>
                 </RowTemplate>
                 <PagerContent>
@@ -89,6 +97,10 @@
             <MudButton Class="mt-6" Variant="Variant.Filled" Color="Color.Primary" FullWidth="true"
                        OnClick="SaveChanges">
                 Save editions
+            </MudButton>
+            <MudButton Class="mt-2" Variant="Variant.Filled" Color="Color.Error" FullWidth="true"
+                       OnClick="BanAccount">
+                Ban Account
             </MudButton>
         </MudPaper>
     </MudItem>
@@ -144,6 +156,13 @@
             2 => "Druid",
             3 => "Paladin",
             4 => "Knight",
+            5 => "Master Sorcerer",
+            6 => "Elder Druid",
+            7 => "Royal Paladin",
+            8 => "Elite Knight",
+            9 => "Tutor",
+            10 => "Game Master",
+            11 => "GOD",
             _ => "Unknown"
         };
     }
@@ -172,6 +191,35 @@
         else
         {
             Snackbar.Add($"Error updating account: {response.ErrorMessage}", Severity.Error);
+        }
+    }
+
+    private async Task BanAccount()
+    {
+        var result = await DialogService.ShowMessageBox(
+            "Confirm Ban",
+            "Are you sure you want to ban this account?",
+            yesText: "Ban",
+            cancelText: "Cancel");
+
+        if (result == true)
+        {
+            var banRequest = new BanAccountRequest();
+            banRequest.SetAccountId(AccountId);
+            banRequest.Reason = "Banned by admin";
+            banRequest.Days = 7;
+
+            var response = await Mediator.Send(banRequest);
+
+            if (response.IsSuccess)
+            {
+                Snackbar.Add("Account banned successfully!", Severity.Success);
+                await LoadAccount();
+            }
+            else
+            {
+                Snackbar.Add($"Error banning account: {response.ErrorMessage}", Severity.Error);
+            }
         }
     }
 }

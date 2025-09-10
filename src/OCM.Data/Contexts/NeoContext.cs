@@ -29,6 +29,7 @@ public class NeoContext : DbContext
     public DbSet<GuildEntity> Guilds { get; set; }
     public DbSet<GuildMembershipEntity> GuildMemberships { get; set; }
     public DbSet<WorldEntity> Worlds { get; set; }
+    public DbSet<TownEntity> Towns { get; set; }
     public DbSet<PlayerQuestEntity> PlayerQuests { get; set; }
     public DbSet<PlayerOutfitAddonEntity> PlayerOutfitAddons { get; set; }
     public DbSet<PlayerStorageEntity> PlayerStorages { get; set; }
@@ -62,6 +63,7 @@ public class NeoContext : DbContext
             modelBuilder.ApplyConfiguration(new ForSqLiteAccountEntityConfiguration());
             modelBuilder.ApplyConfiguration(new ForSqLiteGuildEntityConfiguration());
             modelBuilder.ApplyConfiguration(new ForSqLiteGuildRankEntityConfiguration());
+            modelBuilder.ApplyConfiguration(new ForSqLiteTownEntityConfiguration());
             modelBuilder.ApplyConfiguration(new ForSqLiteWorldEntityConfiguration());
             modelBuilder.ApplyConfiguration(new ForSqLiteAccountPremiumHistoryEntityConfiguration());
             modelBuilder.ApplyConfiguration(new ForSqLitePlayerDeathEntityConfiguration());
@@ -75,6 +77,7 @@ public class NeoContext : DbContext
             modelBuilder.ApplyConfiguration(new PlayerDepotItemEntitytConfiguration());
             modelBuilder.ApplyConfiguration(new PlayerEntityConfiguration());
             modelBuilder.ApplyConfiguration(new GuildEntityConfiguration());
+            modelBuilder.ApplyConfiguration(new TownEntityConfiguration());
             modelBuilder.ApplyConfiguration(new GuildRankEntityConfiguration());
             modelBuilder.ApplyConfiguration(new WorldEntityConfiguration());
             modelBuilder.ApplyConfiguration(new AccountPremiumHistoryEntityConfiguration());

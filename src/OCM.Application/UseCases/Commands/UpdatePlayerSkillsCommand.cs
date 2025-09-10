@@ -23,6 +23,7 @@ public class UpdatePlayerSkillsCommand(IPlayerRepository playerRepository)
         entity.SkillShielding = request.SkillShielding;
         entity.SkillFist = request.SkillFist;
         entity.SkillFishing = request.SkillFishing;
+        entity.MagicLevel = request.SkillMagicLevel;
 
         await playerRepository.Update(entity);
         return new OutputResponse();

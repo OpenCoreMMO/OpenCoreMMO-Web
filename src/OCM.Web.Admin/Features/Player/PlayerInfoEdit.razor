@@ -1,3 +1,14 @@
+@using MediatR
+@using OCM.Application.Requests.Queries
+@using OCM.Application.Requests.Commands
+@using OCM.Application.Response
+@using OCM.Application.Response.World
+@using OCM.Application.Response.Town
+@using OCM.Infrastructure.Models
+@using MudBlazor
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+
 <MudDialog>
     <DialogContent>
         <MudText Typo="Typo.h5" Align="Align.Center" Class="mb-4">Edit Info</MudText>
@@ -43,7 +54,7 @@
                 <MudSelect T="string" Label="Vocation" @bind-Value="Character.Vocation" Variant="Variant.Outlined">
                     @foreach (var vocation in VocationOptions)
                     {
-                        <MudSelectItem Value="@vocation">@vocation</MudSelectItem>
+                        <MudSelectItem Value="@vocation.Name">@vocation.Name</MudSelectItem>
                     }
                 </MudSelect>
             </MudItem>
@@ -56,19 +67,26 @@
             </MudItem>
 
             <MudItem xs="12" sm="6">
-                <MudSelect T="string" Label="World" @bind-Value="Character.World" Variant="Variant.Outlined">
-                    @foreach (var world in WorldOptions)
+                <MudSelect T="string" Label="World" Value="@SelectedWorldName" ValueChanged="OnWorldChanged" Variant="Variant.Outlined">
+                    @foreach (var world in Worlds)
                     {
-                        <MudSelectItem Value="@world">@world</MudSelectItem>
+                        <MudSelectItem Value="@world.Name">@world.Name</MudSelectItem>
                     }
                 </MudSelect>
             </MudItem>
 
             <MudItem xs="12" sm="6">
-                <MudSelect T="string" Label="Town" @bind-Value="Character.Town" Variant="Variant.Outlined">
-                    @foreach (var town in TownOptions)
+                <MudSelect T="string" Label="Town" @bind-Value="Character.Town" Variant="Variant.Outlined" Disabled="@(Towns.Count == 0)">
+                    @if (Towns.Count == 0)
                     {
-                        <MudSelectItem Value="@town">@town</MudSelectItem>
+                        <MudSelectItem Value="@(string.Empty)">Select a world first</MudSelectItem>
+                    }
+                    else
+                    {
+                        @foreach (var town in Towns)
+                        {
+                            <MudSelectItem Value="@town.Name">@town.Name</MudSelectItem>
+                        }
                     }
                 </MudSelect>
             </MudItem>
@@ -86,13 +104,133 @@
 
     [Parameter] public CharacterInfoEditViewModel Character { get; set; } = new();
 
-    readonly List<string> VocationOptions = new() { "Paladin", "Knight", "Mage", "Druid" };
-    readonly List<string> WorldOptions = new() { "LocalHost", "World1", "World2" };
-    readonly List<string> TownOptions = new() { "Dawnport", "Thais", "Carlin" };
-
-    void Submit()
+    private List<WorldResponseViewModel> Worlds { get; set; } = new();
+    private List<TownResponseViewModel> Towns { get; set; } = new();
+    private int? SelectedWorldId { get; set; }
+    private string SelectedWorldName { get; set; }
+    readonly List<VocationOption> VocationOptions = new()
     {
-        MudDialog.Close(DialogResult.Ok(Character));
+        new VocationOption { Id = 1, Name = "Sorcerer", Description = "a sorcerer" },
+        new VocationOption { Id = 2, Name = "Druid", Description = "a druid" },
+        new VocationOption { Id = 3, Name = "Paladin", Description = "a paladin" },
+        new VocationOption { Id = 4, Name = "Knight", Description = "a knight" },
+        new VocationOption { Id = 5, Name = "Master Sorcerer", Description = "a master sorcerer" },
+        new VocationOption { Id = 6, Name = "Elder Druid", Description = "an elder druid" },
+        new VocationOption { Id = 7, Name = "Royal Paladin", Description = "a royal paladin" },
+        new VocationOption { Id = 8, Name = "Elite Knight", Description = "an elite knight" },
+        new VocationOption { Id = 9, Name = "Tutor", Description = "a tutor" },
+        new VocationOption { Id = 10, Name = "Game Master", Description = "a Game Master" },
+        new VocationOption { Id = 11, Name = "GOD", Description = "GOD" }
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadWorlds();
+        SelectedWorldName = Character.World;
+        var selectedWorld = Worlds.FirstOrDefault(w => w.Name == SelectedWorldName);
+        SelectedWorldId = selectedWorld?.Id;
+        await LoadTowns(SelectedWorldId);
+    }
+
+    private async Task LoadWorlds()
+    {
+        var request = new GetWorldsRequest
+        {
+            Page = 1,
+            Limit = 100 // Load all worlds for the dropdown
+        };
+
+        var response = await Mediator.Send(request);
+        Worlds = response.Data.ToList();
+    }
+
+    private async Task LoadTowns(int? worldId)
+    {
+        if (worldId.HasValue)
+        {
+            var request = new GetTownsRequest
+            {
+                WorldId = worldId.Value,
+                Page = 1,
+                Limit = 100 // Load all towns for the selected world
+            };
+
+            var response = await Mediator.Send(request);
+            Towns = response.Data.ToList();
+        }
+        else
+        {
+            Towns = new List<TownResponseViewModel>();
+        }
+    }
+
+    private async Task OnWorldChanged(string worldName)
+    {
+        SelectedWorldName = worldName;
+        Character.World = worldName;
+
+        var selectedWorld = Worlds.FirstOrDefault(w => w.Name == worldName);
+        SelectedWorldId = selectedWorld?.Id;
+        await LoadTowns(SelectedWorldId);
+
+        // Clear town selection if world changed
+        if (string.IsNullOrEmpty(worldName))
+        {
+            Character.Town = null;
+        }
+    }
+
+    private async Task Submit()
+    {
+        try
+        {
+            var request = new UpdatePlayerInfosRequest
+            {
+                Name = Character.Name,
+                Health = (uint)Character.Health,
+                MaxHealth = (uint)Character.MaxHealth,
+                Level = (ushort)Character.Level,
+                Experience = Character.Experience,
+                Mana = (ushort)Character.Mana,
+                MaxMana = (ushort)Character.MaxMana,
+                Soul = (byte)Character.SoulPoints,
+                Capacity = (uint)Character.Capacity,
+                BankAmount = (ulong)Character.Balance
+            };
+
+            // Map Vocation
+            var vocation = VocationOptions.FirstOrDefault(v => v.Name == Character.Vocation);
+            request.Vocation = (byte)(vocation?.Id ?? 1);
+
+            // Map Sex
+            request.Gender = Character.Sex == "Male" ? Gender.Male : Gender.Female;
+
+            // Map World
+            var world = Worlds.FirstOrDefault(w => w.Name == Character.World);
+            request.WorldId = world?.Id ?? 0;
+
+            // Map Town
+            var town = Towns.FirstOrDefault(t => t.Name == Character.Town);
+            request.TownId = town?.Id ?? 0;
+
+            request.SetPlayerId(Character.Id);
+
+            var response = await Mediator.Send(request);
+
+            if (response.IsSuccess)
+            {
+                Snackbar.Add("Player info updated successfully!", Severity.Success);
+                MudDialog.Close(DialogResult.Ok(Character));
+            }
+            else
+            {
+                Snackbar.Add($"Failed to update player: {response.ErrorMessage}", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error updating player: {ex.Message}", Severity.Error);
+        }
     }
 
     void Cancel()
@@ -119,7 +257,11 @@
         public string Town { get; set; }
     }
 
+    public class VocationOption
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public string Description { get; set; }
+    }
 
 }
-
-
