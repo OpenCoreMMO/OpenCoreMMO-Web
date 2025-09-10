@@ -36,7 +36,7 @@
                 </HeaderContent>
                 <RowTemplate>
                     <MudTd>
-                        <MudAvatar Size="Size.Medium" Image="_content/MudBlazor.WebAssembly/images/avatars/avatar1.png"/>
+                        <MudAvatar Size="Size.Medium">@(context.Name.Length >= 2 ? context.Name.Substring(0, 2).ToUpper() : context.Name.ToUpper())</MudAvatar>
                     </MudTd>
                     <MudTd>
                         <div>@context.Name</div>
@@ -50,7 +50,7 @@
                         </MudChip>
                     </MudTd>
                     <MudTd align="right">
-                        <MudIconButton Icon="@Icons.Material.Filled.Visibility" Color="Color.Primary"/>
+                        <MudIconButton Icon="@Icons.Material.Filled.Visibility" Color="Color.Primary" Href="@($"/player/{context.Id}")"/>
                     </MudTd>
                 </RowTemplate>
                 <PagerContent>
