@@ -39,6 +39,8 @@ public class UpdatePlayerInfosCommand(IPlayerRepository playerRepository)
         entity.MaxSoul = request.MaxSoul;
         entity.Group = request.Group;
         entity.Name = request.Name;
+        entity.Experience = request.Experience;
+        entity.BankAmount = request.BankAmount;
 
         await playerRepository.Update(entity);
         return new OutputResponse();

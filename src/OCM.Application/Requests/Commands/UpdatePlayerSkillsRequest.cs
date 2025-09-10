@@ -14,6 +14,7 @@ public class UpdatePlayerSkillsRequest : IRequest<OutputResponse>, ICommandBase
     public int SkillShielding { get; set; }
     public int SkillFist { get; set; }
     public int SkillFishing { get; set; }
+    public int SkillMagicLevel { get; set; }
 
     public void SetPlayerId(int id)
     {
