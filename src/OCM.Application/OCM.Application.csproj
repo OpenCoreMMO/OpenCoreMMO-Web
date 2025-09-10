@@ -21,6 +21,7 @@
 
     <ItemGroup>
         <Folder Include="IoC\Modules\"/>
+        <Folder Include="UseCases\Commands\Account\" />
         <Folder Include="UseCases\Queries\Account\" />
     </ItemGroup>
 

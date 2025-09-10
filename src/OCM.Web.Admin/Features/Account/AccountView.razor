@@ -1,4 +1,13 @@
 @page "/accounts/{AccountId:int}"
+@using MediatR
+@using OCM.Application.Requests.Queries
+@using OCM.Application.Requests.Commands
+@using OCM.Application.Response
+@using OCM.Application.Response.Player
+@using OCM.Application.Response.Account
+@using MudBlazor
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
 
 <MudGrid>
     <!-- Characters Table -->
@@ -9,7 +18,7 @@
                 <MudText Typo="Typo.subtitle2" Color="Color.Secondary">List of all characters on the account</MudText>
             </div>
 
-            <MudTable Items="Characters" Dense="true" Hover="true" Class="mt-4">
+            <MudTable T="PlayerResponseViewModel" ServerData="ServerReload" Dense="true" Hover="true" Class="mt-4">
                 <HeaderContent>
                     <MudTh></MudTh>
                     <MudTh>Name</MudTh>
@@ -20,22 +29,26 @@
                 </HeaderContent>
                 <RowTemplate>
                     <MudTd>
-                        <MudAvatar Size="Size.Medium" Image="@context.AvatarUrl"/>
+                        <MudAvatar Size="Size.Medium" Image="_content/MudBlazor.WebAssembly/images/avatars/avatar1.png"/>
                     </MudTd>
                     <MudTd>
                         <div>@context.Name</div>
-                        <div class="text-sm text-secondary">@context.Vocation</div>
+                        <div class="text-sm text-secondary">@GetVocationName(context.Vocation)</div>
                     </MudTd>
                     <MudTd>@context.Level</MudTd>
                     <MudTd>@context.Group</MudTd>
                     <MudTd>
-                        <MudChip T="string" Color="Color.Error" Variant="Variant.Filled" Size="Size.Small">Offline
+                        <MudChip T="string" Color="@(context.Online ? Color.Success : Color.Error)" Variant="Variant.Filled" Size="Size.Small">
+                            @(context.Online ? "Online" : "Offline")
                         </MudChip>
                     </MudTd>
                     <MudTd align="right">
                         <MudIconButton Icon="@Icons.Material.Filled.Visibility" Color="Color.Primary"/>
                     </MudTd>
                 </RowTemplate>
+                <PagerContent>
+                    <MudTablePager />
+                </PagerContent>
             </MudTable>
         </MudPaper>
     </MudItem>
@@ -85,48 +98,79 @@
 @code {
     [Parameter] public int AccountId { get; set; }
 
-    public class CharacterModel
+    private AccountResponseViewModel Account { get; set; } = new AccountResponseViewModel();
+
+    protected override async Task OnInitializedAsync()
     {
-        public string Name { get; set; }
-        public string Vocation { get; set; }
-        public int Level { get; set; }
-        public string Group { get; set; }
-        public string AvatarUrl { get; set; } = "_content/MudBlazor.WebAssembly/images/avatars/avatar1.png"; // Placeholder
+        await LoadAccount();
     }
 
-    public class AccountModel
+    private async Task LoadAccount()
     {
-        public string Email { get; set; }
-        public string Password { get; set; }
-        public int PageAccess { get; set; }
-        public int Type { get; set; }
-        public int PremiumDays { get; set; }
-        public int Coins { get; set; }
+        var request = new GetAccountsRequest
+        {
+            // For now, we'll load all accounts and find the one with matching ID
+            // In a real implementation, you might want a GetAccountById query
+            Page = 1,
+            Limit = 1000 // Load enough to find the account
+        };
+
+        var response = await Mediator.Send(request);
+        Account = response.Data.FirstOrDefault(a => a.Id == AccountId);
     }
 
-    private readonly List<CharacterModel> Characters = new()
+    private async Task<TableData<PlayerResponseViewModel>> ServerReload(TableState state, CancellationToken token)
     {
-        new CharacterModel { Name = "Rook Test", Vocation = "Paladin", Level = 5, Group = "player" },
-        new CharacterModel { Name = "MUNIZ", Vocation = "Sorcerer", Level = 50, Group = "player" },
-        new CharacterModel { Name = "Druid Test", Vocation = "Druid", Level = 50, Group = "player" },
-        new CharacterModel { Name = "Paladin Test", Vocation = "Paladin", Level = 8, Group = "player" },
-        new CharacterModel { Name = "Knight Test", Vocation = "Knight", Level = 8, Group = "player" },
-        new CharacterModel { Name = "GOD", Vocation = "None", Level = 10000, Group = "god" }
-    };
+        var request = new GetPlayersRequest
+        {
+            AccountId = AccountId,
+            Page = state.Page + 1,
+            Limit = state.PageSize
+        };
 
-    private readonly AccountModel Account = new()
-    {
-        Email = "god@mail.com",
-        Password = "",
-        PageAccess = 3,
-        Type = 5,
-        PremiumDays = 1000,
-        Coins = 2000000
-    };
-
-    private void SaveChanges()
-    {
-        // Save logic here
+        var response = await Mediator.Send(request, token);
+        return new TableData<PlayerResponseViewModel>
+        {
+            TotalItems = response.TotalRecords,
+            Items = response.Data
+        };
     }
 
+
+    private string GetVocationName(byte vocation)
+    {
+        return vocation switch
+        {
+            1 => "Sorcerer",
+            2 => "Druid",
+            3 => "Paladin",
+            4 => "Knight",
+            _ => "Unknown"
+        };
+    }
+
+    private async Task SaveChanges()
+    {
+        var request = new UpdateAccountRequest
+        {
+            Id = AccountId,
+            Email = Account.Email,
+            Password = Account.Password,
+            PageAccess = Account.PageAccess,
+            Type = Account.Type,
+            PremiumDays = Account.PremiumDays,
+            Coins = Account.Coins
+        };
+
+        var response = await Mediator.Send(request);
+
+        if (response.IsSuccess)
+        {
+            Snackbar.Add("Account updated successfully!", Severity.Success);
+        }
+        else
+        {
+            Snackbar.Add($"Error updating account: {response.ErrorMessage}", Severity.Error);
+        }
+    }
 }
