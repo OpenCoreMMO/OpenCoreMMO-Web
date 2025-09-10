@@ -167,6 +167,8 @@
         if (response.IsSuccess)
         {
             Snackbar.Add("Account updated successfully!", Severity.Success);
+            // Reload account data to reflect changes
+            await LoadAccount();
         }
         else
         {

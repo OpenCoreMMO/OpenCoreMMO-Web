@@ -26,7 +26,17 @@ public class UpdateAccountCommand(IAccountRepository accountRepository)
         // Update Coins from the account table
         account.Coins = request.Coins;
 
-        // Note: PageAccess, Type, and PremiumDays are not direct properties of AccountEntity
+        // Update Premium Days - calculate PremiumTimeEndAt from PremiumDays
+        if (request.PremiumDays > 0)
+        {
+            account.PremiumTimeEndAt = DateTime.UtcNow.AddDays(request.PremiumDays);
+        }
+        else
+        {
+            account.PremiumTimeEndAt = null;
+        }
+
+        // Note: PageAccess and Type are not direct properties of AccountEntity
         // These might need to be stored in separate tables or calculated fields
         // For now, we'll skip updating these as they may require additional business logic
 
