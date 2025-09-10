@@ -77,6 +77,9 @@ public class PlayerEntityConfiguration : IEntityTypeConfiguration<PlayerEntity>
         entity.HasOne(d => d.World)
             .WithMany()
             .HasForeignKey(d => d.WorldId);
+        entity.HasOne(d => d.Town)
+            .WithMany()
+            .HasForeignKey(d => d.TownId);
 
         entity.HasOne(x => x.GuildMember).WithOne(x => x.Player);
 

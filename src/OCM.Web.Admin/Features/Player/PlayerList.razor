@@ -13,8 +13,6 @@
 
 @if (Players?.Data is not null)
 {
-    <MudButton Color="@Color.Success" Class="add-item-btn">Add Player</MudButton>
-    <br/>
     <MudTable Items="Players?.Data" RowsPerPage="5" Bordered="true" Hover="true" Elevation="3">
         <ToolBarContent>
             <MudText Typo="Typo.h6">Players</MudText>
