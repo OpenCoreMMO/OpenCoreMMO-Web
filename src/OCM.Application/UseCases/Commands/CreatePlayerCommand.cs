@@ -8,7 +8,7 @@ using OCM.Infrastructure.Entities;
 using OCM.Infrastructure.Interfaces;
 using OCM.Infrastructure.Models;
 
-namespace NeoServer.Web.API.Application.UseCases.Commands;
+namespace OCM.Application.UseCases.Commands;
 
 public class CreatePlayerCommand(IPlayerRepository playerRepository, IOptions<PlayerConfig> config)
     : IRequestHandler<CreatePlayerRequest, OutputResponse>

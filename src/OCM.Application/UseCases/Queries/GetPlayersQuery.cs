@@ -6,7 +6,7 @@ using OCM.Application.Response.Player;
 using OCM.Infrastructure.Entities;
 using OCM.Infrastructure.Interfaces;
 
-namespace NeoServer.Web.API.Application.UseCases.Queries;
+namespace OCM.Application.UseCases.Queries;
 
 public class GetPlayersQuery(IPlayerRepository playerRepository)
     : IRequestHandler<GetPlayersRequest, BasePagedResponseViewModel<IEnumerable<PlayerResponseViewModel>>>

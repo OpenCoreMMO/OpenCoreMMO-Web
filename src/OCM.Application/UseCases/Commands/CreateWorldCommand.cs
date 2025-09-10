@@ -5,7 +5,7 @@ using OCM.Application.Response.Constants;
 using OCM.Infrastructure.Entities;
 using OCM.Infrastructure.Interfaces;
 
-namespace NeoServer.Web.API.Application.UseCases.Commands;
+namespace OCM.Application.UseCases.Commands;
 
 public class CreateWorldCommand(IWorldRepository worldRepository) : IRequestHandler<CreateWorldRequest, OutputResponse>
 {

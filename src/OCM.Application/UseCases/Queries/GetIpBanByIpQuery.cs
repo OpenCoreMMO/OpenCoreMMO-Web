@@ -3,7 +3,7 @@ using OCM.Application.Requests.Queries;
 using OCM.Application.Response.IpBans;
 using OCM.Infrastructure.Interfaces;
 
-namespace NeoServer.Web.API.Application.UseCases.Queries;
+namespace OCM.Application.UseCases.Queries;
 
 public class GetIpBanByIpQuery(IIpBansRepository ipBansRepository)
     : IRequestHandler<GetIpBanByIpRequest, IpBanResponseViewModel>

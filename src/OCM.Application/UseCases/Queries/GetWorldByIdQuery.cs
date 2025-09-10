@@ -3,7 +3,7 @@ using OCM.Application.Requests.Queries;
 using OCM.Application.Response.World;
 using OCM.Infrastructure.Interfaces;
 
-namespace NeoServer.Web.API.Application.UseCases.Queries;
+namespace OCM.Application.UseCases.Queries;
 
 public class GetWorldByIdQuery(IWorldRepository worldRepository)
     : IRequestHandler<GetWorldByIdRequest, WorldResponseViewModel>

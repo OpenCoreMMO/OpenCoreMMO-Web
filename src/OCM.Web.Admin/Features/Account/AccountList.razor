@@ -1,11 +1,15 @@
 @page "/accounts"
+@using OCM.Application.Requests.Queries
+@using OCM.Application.Response.Account
+@using MediatR
+@using MudBlazor
 
 <MudPaper Class="mx-auto mt-4" Elevation="2">
     <div class="pa-4">
         <MudText Typo="Typo.h6">Accounts</MudText>
         <MudText Typo="Typo.subtitle2" Color="Color.Secondary">List of all created accounts</MudText>
     </div>
-    <MudTable Items="Accounts" Dense="true" Hover="true" Bordered="false" Class="mt-4">
+    <MudTable T="AccountResponseViewModel" ServerData="ServerReload" Dense="true" Hover="true" Bordered="false" Class="mt-4">
         <HeaderContent>
             <MudTh>#</MudTh>
             <MudTh>Name</MudTh>
@@ -27,25 +31,21 @@
                                Color="Color.Primary"/>
             </MudTd>
         </RowTemplate>
+    <PagerContent>
+        <MudTablePager />
+    </PagerContent>
     </MudTable>
 </MudPaper>
 
 @code {
 
-    public class AccountModel
-    {
-        public int Id { get; set; }
-        public string Email { get; set; }
-        public int PageAccess { get; set; }
-        public int Coins { get; set; }
-    }
+    [Inject] private IMediator Mediator { get; set; }
 
-    private readonly List<AccountModel> Accounts = new()
+    private async Task<TableData<AccountResponseViewModel>> ServerReload(TableState state, CancellationToken token)
     {
-        new AccountModel { Id = 1, Email = "god@mail.com", PageAccess = 3, Coins = 2000000 },
-        new AccountModel { Id = 3, Email = "autor.net@gmail.com", PageAccess = 1, Coins = 1000 },
-        new AccountModel { Id = 4, Email = "autor@teste.com", PageAccess = 3, Coins = 500000 },
-        new AccountModel { Id = 5, Email = "autor2@teste.com", PageAccess = 0, Coins = 0 }
-    };
+        var request = new GetAccountsRequest { Page = state.Page + 1, Limit = state.PageSize };
+        var response = await Mediator.Send(request, token);
+        return new TableData<AccountResponseViewModel> { TotalItems = response.TotalRecords, Items = response.Data };
+    }
 
 }

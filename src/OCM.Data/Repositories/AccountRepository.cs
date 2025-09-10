@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using OCM.Infrastructure.Contexts;
@@ -23,6 +25,18 @@ public class AccountRepository : BaseRepository<AccountEntity>, IAccountReposito
     #region public methods implementation
 
     #region gets
+
+    public async Task<IList<AccountEntity>> GetPaginatedAccountsAsync(Expression<Func<AccountEntity, bool>> filter, int page, int limit)
+    {
+        await using var context = NewDbContext;
+        var skip = (page - 1) * limit;
+        return await context.Accounts
+            .Where(filter)
+            .Include(x => x.Players)
+            .Skip(skip)
+            .Take(limit)
+            .ToListAsync();
+    }
 
     public async Task<AccountEntity> GetAccount(string name, string password)
     {

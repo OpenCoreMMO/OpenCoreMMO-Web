@@ -21,6 +21,7 @@ public sealed class AccountEntity
     public DateTime? BanishedEndAt { get; set; }
     public string BanishmentReason { get; set; }
     public uint? BannedBy { get; set; }
+    public int Coins { get; set; }
 
     public ICollection<PlayerEntity> Players { get; set; }
     public ICollection<AccountVipListEntity> VipList { get; set; }
