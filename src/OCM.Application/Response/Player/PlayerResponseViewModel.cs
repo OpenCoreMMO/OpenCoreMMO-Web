@@ -100,32 +100,36 @@ public class PlayerResponseViewModel
                 PosZ = entity.PosZ,
 
                 SkillFist = entity.SkillFist,
-                SkillFistTries = entity.SkillFist,
+                SkillFistTries = entity.SkillFistTries,
 
                 SkillClub = entity.SkillClub,
-                SkillClubTries = entity.SkillClub,
+                SkillClubTries = entity.SkillClubTries,
 
                 SkillSword = entity.SkillSword,
-                SkillSwordTries = entity.SkillSword,
+                SkillSwordTries = entity.SkillSwordTries,
 
                 SkillAxe = entity.SkillAxe,
-                SkillAxeTries = entity.SkillAxe,
+                SkillAxeTries = entity.SkillAxeTries,
 
                 SkillDist = entity.SkillDist,
-                SkillDistTries = entity.SkillDist,
+                SkillDistTries = entity.SkillDistTries,
 
                 SkillShielding = entity.SkillShielding,
-                SkillShieldingTries = entity.SkillShielding,
+                SkillShieldingTries = entity.SkillShieldingTries,
 
                 SkillFishing = entity.SkillFishing,
-                SkillFishingTries = entity.SkillFishing,
+                SkillFishingTries = entity.SkillFishingTries,
 
                 MagicLevel = entity.MagicLevel,
-                MagicLevelTries = entity.MagicLevel,
+                MagicLevelTries = entity.MagicLevelTries,
 
                 Experience = entity.Experience,
                 ChaseMode = entity.ChaseMode,
-                FightMode = entity.FightMode
+                FightMode = entity.FightMode,
+                Gender = entity.Gender,
+                Vocation = entity.Vocation,
+                RemainingRecoverySeconds = entity.RemainingRecoverySeconds,
+                WorldId = entity.WorldId
             };
     }
 }
