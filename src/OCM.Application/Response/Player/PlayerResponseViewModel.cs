@@ -76,6 +76,7 @@ public class PlayerResponseViewModel
     public string Tutorial { get; set; }
     public string Blessings { get; set; }
     public int WorldId { get; set; }
+    public long ExperienceToNextLevel { get; set; }
 
     private static string GetVocationName(byte vocation)
     {
@@ -133,9 +134,65 @@ public class PlayerResponseViewModel
 
     private static int CalculateLevelPercentage(double experience, ushort level)
     {
-        // Simple mock calculation - in real tibia, experience for level is more complex
-        // For now, just return a percentage based on level
-        return level % 10 * 10; // Mock
+        // Calculate experience needed for current level
+        long expForCurrentLevel = CalculateExperienceForLevel(level);
+
+        // If player has less experience than needed for current level,
+        // treat them as if they're progressing from level 1
+        if (experience < expForCurrentLevel)
+        {
+            // Use level 1 as baseline
+            expForCurrentLevel = 0;
+            level = 1;
+        }
+
+        // Calculate experience needed for next level
+        long expForNextLevel = CalculateExperienceForLevel(level + 1);
+
+        // Calculate progress percentage
+        double expInCurrentLevel = experience - expForCurrentLevel;
+        double expNeededForNextLevel = expForNextLevel - expForCurrentLevel;
+
+        if (expNeededForNextLevel <= 0) return 100;
+
+        double percentage = (expInCurrentLevel / expNeededForNextLevel) * 100;
+
+        // Ensure percentage is within valid range
+        if (percentage < 0) return 0;
+        if (percentage > 100) return 100;
+
+        return (int)percentage;
+    }
+
+    private static long CalculateExperienceForLevel(int level)
+    {
+        if (level <= 1) return 0;
+
+        // Exp(Level) = (50 × (Level³ - Level)) / 3
+        long levelCubed = (long)level * level * level;
+        return (50 * (levelCubed - level)) / 3;
+    }
+
+    private static long CalculateExperienceToNextLevel(double experience, ushort level)
+    {
+        // Calculate experience needed for current level
+        long expForCurrentLevel = CalculateExperienceForLevel(level);
+
+        // If player has less experience than needed for current level,
+        // treat them as level 1
+        if (experience < expForCurrentLevel)
+        {
+            return CalculateExperienceForLevel(2) - (long)experience;
+        }
+
+        // Calculate experience needed for next level based on current level
+        long expForNextLevel = CalculateExperienceForLevel(level + 1);
+
+        // Calculate remaining experience needed
+        long remaining = expForNextLevel - (long)experience;
+
+        // If remaining is negative (player has more exp than needed), return 0
+        return remaining > 0 ? remaining : 0;
     }
 
     public static implicit operator PlayerResponseViewModel(PlayerEntity entity)
@@ -214,7 +271,8 @@ public class PlayerResponseViewModel
                 TownName = entity.Town?.Name ?? "Unknown",
                 DailyReward = "Open", // Mock
                 Tutorial = "x", // Mock
-                Blessings = "Access edit" // Mock
+                Blessings = "Access edit", // Mock
+                ExperienceToNextLevel = CalculateExperienceToNextLevel(entity.Experience, entity.Level)
             };
     }
 }

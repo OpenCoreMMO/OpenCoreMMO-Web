@@ -47,7 +47,7 @@ else
         <MudItem xs="12" md="3">
             <MudPaper Class="pa-6">
                 <MudButton StartIcon="@Icons.Material.Filled.Visibility" Variant="Variant.Filled" Color="Color.Primary"
-                            Class="mb-2" FullWidth>Account
+                            Class="mb-2" FullWidth OnClick="NavigateToAccount">Account
                 </MudButton>
                 <MudButton StartIcon="@Icons.Material.Filled.Edit" OnClick="OpenPlayerInfoDialog" Variant="Variant.Filled"
                             Color="Color.Primary"
@@ -111,6 +111,9 @@ else
                 <MudText Typo="Typo.body2"><b>Experience:</b>
                     <MudChip T="int">@Player.Experience</MudChip>
                 </MudText>
+                <MudText Typo="Typo.body2"><b>To Next Level:</b>
+                    <MudChip T="long">@Player.ExperienceToNextLevel</MudChip>
+                </MudText>
                 <MudText Typo="Typo.body2"><b>Soul Points:</b>
                     <MudChip T="byte">@Player.Soul</MudChip>
                 </MudText>
@@ -158,9 +161,18 @@ else
 @code {
     [Parameter] public int Id { get; set; }
     [Inject] private IMediator Mediator { get; set; }
+    [Inject] private NavigationManager NavigationManager { get; set; }
     public PlayerResponseViewModel Player { get; set; }
     public bool IsLoading { get; set; } = true;
     public string ErrorMessage { get; set; }
+
+    private void NavigateToAccount()
+    {
+        if (Player != null)
+        {
+            NavigationManager.NavigateTo($"/accounts/{Player.AccountId}");
+        }
+    }
 
     public Dictionary<string, int> Skills => Player == null ? new() : new()
     {
