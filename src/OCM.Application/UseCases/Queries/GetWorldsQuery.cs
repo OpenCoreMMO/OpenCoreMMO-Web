@@ -6,7 +6,7 @@ using OCM.Application.Response.World;
 using OCM.Infrastructure.Entities;
 using OCM.Infrastructure.Interfaces;
 
-namespace NeoServer.Web.API.Application.UseCases.Queries;
+namespace OCM.Application.UseCases.Queries;
 
 public class GetWorldsQuery(IWorldRepository worldRepository)
     : IRequestHandler<GetWorldsRequest, BasePagedResponseViewModel<IEnumerable<WorldResponseViewModel>>>

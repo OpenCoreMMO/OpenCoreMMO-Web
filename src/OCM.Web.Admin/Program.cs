@@ -1,9 +1,11 @@
 using System.Net;
+using Microsoft.EntityFrameworkCore;
 using MudBlazor.Services;
 using NeoServer.Web.Admin;
 using OCM.Application.Requests.Validators;
 using OCM.IoC;
 using OCM.Web.Admin.Components;
+using OCM.Infrastructure.Contexts;
 
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
@@ -33,6 +35,7 @@ builder.Services.AddRepositories();
 builder.Services.AddMediatR(config =>
 {
     config.RegisterServicesFromAssembly(typeof(Program).Assembly);
+    config.RegisterServicesFromAssembly(typeof(OCM.Application.Requests.Queries.GetAccountsRequest).Assembly);
     config.AddOpenBehavior(typeof(ValidationBehavior<,>));
 });
 
@@ -70,5 +73,12 @@ app.UseAntiforgery();
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
+
+// Ensure database is created
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<NeoContext>();
+    dbContext.Database.EnsureCreated();
+}
 
 app.Run();
