@@ -1,0 +1,83 @@
+@page "/banishments"
+@using OCM.Application.Requests.Queries
+@using OCM.Application.Requests.Commands
+@using OCM.Application.Response.Account
+@using MediatR
+@using MudBlazor
+
+<MudPaper Class="mx-auto mt-4" Elevation="2">
+    <div class="pa-4">
+        <MudText Typo="Typo.h6">Banishments</MudText>
+        <MudText Typo="Typo.subtitle2" Color="Color.Secondary">List of all banned accounts</MudText>
+    </div>
+    <MudTable T="AccountResponseViewModel" @key="reloadKey" ServerData="ServerReload" Dense="true" Hover="true" Bordered="false" Class="mt-4">
+        <HeaderContent>
+            <MudTh>Account</MudTh>
+            <MudTh>Reason</MudTh>
+            <MudTh>Start</MudTh>
+            <MudTh>End</MudTh>
+            <MudTh>By</MudTh>
+            <MudTh align="right">Action</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Account">@context.Email</MudTd>
+            <MudTd DataLabel="Reason">@context.BanishmentReason</MudTd>
+            <MudTd DataLabel="Start">@(context.BanishedAt.HasValue ? context.BanishedAt.Value.ToLocalTime().ToString("MMM dd, yyyy hh:mm tt") : "N/A")</MudTd>
+            <MudTd DataLabel="End">@(context.BanishedEndAt.HasValue ? context.BanishedEndAt.Value.ToLocalTime().ToString("MMM dd, yyyy hh:mm tt") : "N/A")</MudTd>
+            <MudTd DataLabel="By">@context.BannedBy</MudTd>
+            <MudTd align="right">
+                <MudButton Variant="Variant.Outlined" Color="Color.Warning" OnClick="() => UnbanAccount(context.Id)">
+                    Unban
+                </MudButton>
+            </MudTd>
+        </RowTemplate>
+    <PagerContent>
+        <MudTablePager />
+    </PagerContent>
+    </MudTable>
+</MudPaper>
+
+@code {
+
+    [Inject] private IMediator Mediator { get; set; }
+    [Inject] private IDialogService DialogService { get; set; }
+    [Inject] private ISnackbar Snackbar { get; set; }
+
+    private int reloadKey = 0;
+
+    private async Task<TableData<AccountResponseViewModel>> ServerReload(TableState state, CancellationToken token)
+    {
+        var request = new GetBanishmentsRequest { Page = state.Page + 1, Limit = state.PageSize };
+        var response = await Mediator.Send(request, token);
+        return new TableData<AccountResponseViewModel> { TotalItems = response.TotalRecords, Items = response.Data };
+    }
+
+    private async Task UnbanAccount(int accountId)
+    {
+        var result = await DialogService.ShowMessageBox(
+            "Confirm Unban",
+            "Are you sure you want to unban this account?",
+            yesText: "Unban",
+            cancelText: "Cancel");
+
+        if (result == true)
+        {
+            var unbanRequest = new UnbanAccountRequest();
+            unbanRequest.SetAccountId(accountId);
+
+            var response = await Mediator.Send(unbanRequest);
+
+            if (response.IsSuccess)
+            {
+                Snackbar.Add("Account unbanned successfully!", Severity.Success);
+                reloadKey++;
+                StateHasChanged();
+            }
+            else
+            {
+                Snackbar.Add($"Error unbanning account: {response.ErrorMessage}", Severity.Error);
+            }
+        }
+    }
+
+}
