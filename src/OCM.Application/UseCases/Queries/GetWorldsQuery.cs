@@ -15,6 +15,7 @@ public class GetWorldsQuery(IWorldRepository worldRepository)
         CancellationToken cancellationToken)
     {
         Expression<Func<WorldEntity, bool>> expression = item =>
+            item.DeletedAt == null &&
             (request.Name == null || item.Name.ToLower().Contains(request.Name.ToLower())) &&
             (request.Continent == null || item.Region == request.Continent) &&
             (request.PvpType == null || item.PvpType == request.PvpType) &&

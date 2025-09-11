@@ -31,7 +31,7 @@ public class WorldRepository : BaseRepository<WorldEntity>, IWorldRepository
         await using var context = NewDbContext;
 
         return await context.Worlds
-            .Where(x => x.Name.ToLower().Equals(name.ToLower()) || (x.Ip.Equals(ip) && x.Port == port))
+            .Where(x => x.DeletedAt == null && (x.Name.ToLower().Equals(name.ToLower()) || (x.Ip.Equals(ip) && x.Port == port)))
             .SingleOrDefaultAsync();
     }
 }
