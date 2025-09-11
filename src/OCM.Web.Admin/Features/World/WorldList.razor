@@ -1,60 +1,66 @@
 @page "/worlds"
+@using OCM.Application.Requests.Queries
+@using OCM.Application.Requests.Commands
+@using OCM.Application.Response.World
+@using OCM.Infrastructure.Entities
+@using MediatR
+@using MudBlazor
+
 <MudPaper Class="pa-6 mb-4">
-    <MudGrid Spacing="3">
-        <MudItem xs="12" sm="6" md="3">
-            <MudTextField Label="Name" @bind-Value="NewWorld.Name" Variant="Variant.Outlined"/>
-        </MudItem>
-        <MudItem xs="12" sm="6" md="3">
-            <MudTextField Label="IP Address" @bind-Value="NewWorld.IpAddress" Variant="Variant.Outlined"/>
+    <MudForm @ref="form" @bind-IsValid="@success">
+        <MudGrid Spacing="3">
+            <MudItem xs="12" sm="6" md="3">
+                <MudTextField Label="Name" @bind-Value="NewWorld.Name" Variant="Variant.Outlined" Required="true" RequiredError="Name is required"/>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudTextField Label="IP Address" @bind-Value="NewWorld.Ip" Variant="Variant.Outlined" Required="true" RequiredError="IP Address is required" Validation="@ValidateIPv4"/>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="2">
+                <MudNumericField Label="Port" @bind-Value="NewWorld.Port" Variant="Variant.Outlined" Min="1" Max="65535" Required="true" RequiredError="Port is required"/>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="2">
+                <MudNumericField Label="Max Capacity" @bind-Value="NewWorld.MaxCapacity" Variant="Variant.Outlined" Min="1" Required="true" RequiredError="Max Capacity is required"/>
+            </MudItem>
+        <MudItem xs="12" sm="6" md="2">
+            <MudSelect Label="Location" T="Region" @bind-Value="NewWorld.Region" Variant="Variant.Outlined">
+                <MudSelectItem Value="Region.SouthAmerica">South America</MudSelectItem>
+                <MudSelectItem Value="Region.NorthAmerica">North America</MudSelectItem>
+                <MudSelectItem Value="Region.Europe">Europe</MudSelectItem>
+                <MudSelectItem Value="Region.Africa">Africa</MudSelectItem>
+                <MudSelectItem Value="Region.Asia">Asia</MudSelectItem>
+                <MudSelectItem Value="Region.Australia">Australia</MudSelectItem>
+            </MudSelect>
         </MudItem>
         <MudItem xs="12" sm="6" md="2">
-            <MudTextField Label="Port" @bind-Value="NewWorld.Port" Variant="Variant.Outlined"/>
-        </MudItem>
-        <MudItem xs="12" sm="6" md="4">
-            <MudSelect Label="Battle-Eye" T="string" @bind-Value="NewWorld.BattleEye" Variant="Variant.Outlined">
-                <MudSelectItem Value="@("Not protected by BattlEye.")">Not protected by BattlEye.</MudSelectItem>
-                <MudSelectItem Value=@("Protected by BattlEye.")>Protected by BattlEye.</MudSelectItem>
+            <MudSelect Label="PvP Type" T="PvpType" @bind-Value="NewWorld.PvpType" Variant="Variant.Outlined">
+                <MudSelectItem Value="PvpType.Open">Open PvP</MudSelectItem>
+                <MudSelectItem Value="PvpType.Optional">Optional PvP</MudSelectItem>
+                <MudSelectItem Value="PvpType.HardCore">Hardcore PvP</MudSelectItem>
+                <MudSelectItem Value="PvpType.RetroOpen">Retro Open PvP</MudSelectItem>
+                <MudSelectItem Value="PvpType.RetroHardCore">Retro Hardcore PvP</MudSelectItem>
             </MudSelect>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="2">
+            <MudSelect Label="World Type" T="WorldType" @bind-Value="NewWorld.WorldType" Variant="Variant.Outlined">
+                <MudSelectItem Value="WorldType.Regular">Regular</MudSelectItem>
+                <MudSelectItem Value="WorldType.Experimental">Experimental</MudSelectItem>
+            </MudSelect>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="2">
+            <MudCheckBox T="bool" Label="Requires Premium" @bind-Checked="NewWorld.RequiresPremium" />
+        </MudItem>
+        <MudItem xs="12" sm="6" md="2">
+            <MudCheckBox T="bool" Label="Transfer Enabled" @bind-Checked="NewWorld.TransferEnabled" />
+        </MudItem>
+        <MudItem xs="12" sm="6" md="2">
+            <MudCheckBox T="bool" Label="Anti-Cheat Enabled" @bind-Checked="NewWorld.AntiCheatEnabled" />
         </MudItem>
 
-        <MudItem xs="12" sm="6" md="2">
-            <MudSelect Label="Location" T="string" @bind-Value="NewWorld.Location" Variant="Variant.Outlined">
-                <MudSelectItem Value=@("South America")>South America</MudSelectItem>
-                <MudSelectItem Value=@("North America")>North America</MudSelectItem>
-                <MudSelectItem Value=@("Europe")>Europe</MudSelectItem>
-                <MudSelectItem Value=@("All")>All</MudSelectItem>
-            </MudSelect>
-        </MudItem>
-        <MudItem xs="12" sm="6" md="2">
-            <MudSelect Label="Pvp Type" T="string" @bind-Value="NewWorld.PvpType" Variant="Variant.Outlined">
-                <MudSelectItem Value=@("Open PvP")>Open PvP</MudSelectItem>
-                <MudSelectItem Value=@("Optional PvP")>Optional PvP</MudSelectItem>
-                <MudSelectItem Value=@("Hardcore PvP")>Hardcore PvP</MudSelectItem>
-            </MudSelect>
-        </MudItem>
-        <MudItem xs="12" sm="6" md="2">
-            <MudSelect Label="Premium Type" T="string" @bind-Value="NewWorld.PremiumType" Variant="Variant.Outlined">
-                <MudSelectItem Value=@("free")>Free</MudSelectItem>
-                <MudSelectItem Value=@("premium")>Premium</MudSelectItem>
-            </MudSelect>
-        </MudItem>
-        <MudItem xs="12" sm="6" md="2">
-            <MudSelect Label="Transfer Type" T="string" @bind-Value="NewWorld.TransferType" Variant="Variant.Outlined">
-                <MudSelectItem Value=@("blocked")>Blocked</MudSelectItem>
-                <MudSelectItem Value=@("open")>Open</MudSelectItem>
-            </MudSelect>
-        </MudItem>
-        <MudItem xs="12" sm="6" md="2">
-            <MudSelect Label="World Type" T="string" @bind-Value="NewWorld.WorldType" Variant="Variant.Outlined">
-                <MudSelectItem Value=@("Regular")>Regular</MudSelectItem>
-                <MudSelectItem Value=@("Experimental")>Experimental</MudSelectItem>
-            </MudSelect>
-        </MudItem>
-
-        <MudItem xs="12" sm="3">
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CreateWorld">Create World</MudButton>
-        </MudItem>
-    </MudGrid>
+            <MudItem xs="12" sm="3">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CreateWorld" Disabled="@(!success)">Create World</MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudForm>
 </MudPaper>
 
 
@@ -63,9 +69,9 @@
         <MudText Typo="Typo.h6">Worlds</MudText>
     </div>
 
-    <MudTable Items="Worlds" Dense="true" Hover="true" Class="mt-2">
+    <MudTable T="WorldResponseViewModel" @key="reloadKey" ServerData="ServerReload" Dense="true" Hover="true" Class="mt-2">
         <HeaderContent>
-            <MudTh>Image</MudTh>
+            <MudTh>Name</MudTh>
             <MudTh>IP / Port</MudTh>
             <MudTh>Location</MudTh>
             <MudTh>PvP Type</MudTh>
@@ -77,69 +83,159 @@
         </HeaderContent>
         <RowTemplate>
             <MudTd>@context.Name</MudTd>
-            <MudTd>@context.IpAddress / @context.Port</MudTd>
-            <MudTd>@context.Location</MudTd>
-            <MudTd>@context.PvpType</MudTd>
-            <MudTd>@context.PremiumType</MudTd>
-            <MudTd>@context.TransferType</MudTd>
-            <MudTd>@context.BattleEye</MudTd>
+            <MudTd>@context.Ip / @context.Port</MudTd>
+            <MudTd>@GetRegionDisplay(context.Region)</MudTd>
+            <MudTd>@GetPvpTypeDisplay(context.PvpType)</MudTd>
+            <MudTd>@(context.RequiresPremium ? "Premium" : "Free")</MudTd>
+            <MudTd>@(context.TransferEnabled ? "Open" : "Blocked")</MudTd>
+            <MudTd>@(context.AntiCheatEnabled ? "Protected by BattlEye." : "Not protected by BattlEye.")</MudTd>
             <MudTd>@context.WorldType</MudTd>
             <MudTd>
                 <MudButton Color="Color.Primary" Size="Size.Small" Class="me-2" Href="@($"worlds/{context.Id}/edit")">
                     Edit
                 </MudButton>
-                <MudButton Color="Color.Error" Size="Size.Small" OnClick="@(() => DeleteWorld(context))">Delete
+                <MudButton Color="Color.Error" Size="Size.Small" OnClick="@(() => DeleteWorld(context))" DisableElevation="true">Delete
                 </MudButton>
             </MudTd>
         </RowTemplate>
+        <PagerContent>
+            <MudTablePager />
+        </PagerContent>
     </MudTable>
 </MudPaper>
 
 @code {
+    [Inject] private IMediator Mediator { get; set; }
+    [Inject] private ISnackbar Snackbar { get; set; }
+    [Inject] private IDialogService DialogService { get; set; }
 
     public class WorldModel
     {
         public string Name { get; set; }
-        public string IpAddress { get; set; } = "127.0.0.1";
-        public string Port { get; set; } = "7172";
-        public string Location { get; set; } = "All";
-        public string PvpType { get; set; } = "Open PvP";
-        public string PremiumType { get; set; } = "premium";
-        public string TransferType { get; set; } = "blocked";
-        public string BattleEye { get; set; } = "Not protected by BattlEye.";
-        public string WorldType { get; set; } = "Regular";
-        public int Id { get; set; }
+        public string Ip { get; set; } = "127.0.0.1";
+        public int Port { get; set; } = 7172;
+        public Region Region { get; set; } = Region.SouthAmerica;
+        public PvpType PvpType { get; set; } = PvpType.Open;
+        public bool RequiresPremium { get; set; } = true;
+        public bool TransferEnabled { get; set; } = false;
+        public bool AntiCheatEnabled { get; set; } = false;
+        public WorldType WorldType { get; set; } = WorldType.Regular;
+        public int MaxCapacity { get; set; } = 1000;
     }
 
     private WorldModel NewWorld = new();
 
-    private readonly List<WorldModel> Worlds = new()
-    {
-        new WorldModel { Id = 1, Name = "LocalHost", IpAddress = "127.0.0.1", Port = "7172", Location = "South America" },
-        new WorldModel { Id = 2, Name = "Dev Test", IpAddress = "206.42.57.225", Port = "7172", Location = "South America" }
-    };
+    private int reloadKey = 0;
 
-    private void CreateWorld()
-    {
-        Worlds.Add(new WorldModel
-        {
-            Name = NewWorld.Name,
-            IpAddress = NewWorld.IpAddress,
-            Port = NewWorld.Port,
-            Location = NewWorld.Location,
-            PvpType = NewWorld.PvpType,
-            PremiumType = NewWorld.PremiumType,
-            TransferType = NewWorld.TransferType,
-            BattleEye = NewWorld.BattleEye,
-            WorldType = NewWorld.WorldType
-        });
+    private MudForm form;
+    private bool success;
 
-        NewWorld = new WorldModel(); // Reset form
+    private async Task<TableData<WorldResponseViewModel>> ServerReload(TableState state, CancellationToken token)
+    {
+        var request = new GetWorldsRequest { Page = state.Page + 1, Limit = state.PageSize };
+        var response = await Mediator.Send(request, token);
+        return new TableData<WorldResponseViewModel> { TotalItems = response.TotalRecords, Items = response.Data };
     }
 
-    private void DeleteWorld(WorldModel world)
+    private string GetRegionDisplay(Region region)
     {
-        Worlds.Remove(world);
+        return region switch
+        {
+            Region.NorthAmerica => "North America",
+            Region.SouthAmerica => "South America",
+            _ => region.ToString()
+        };
+    }
+
+    private string GetPvpTypeDisplay(PvpType pvpType)
+    {
+        return pvpType switch
+        {
+            PvpType.Open => "Open PvP",
+            PvpType.Optional => "Optional PvP",
+            PvpType.HardCore => "Hardcore PvP",
+            PvpType.RetroOpen => "Retro Open PvP",
+            PvpType.RetroHardCore => "Retro Hardcore PvP",
+            _ => pvpType.ToString()
+        };
+    }
+
+    private IEnumerable<string> ValidateIPv4(string ip)
+    {
+        if (string.IsNullOrWhiteSpace(ip))
+            yield break;
+
+        // IPv4 regex pattern
+        var ipv4Pattern = @"^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$";
+
+        if (!System.Text.RegularExpressions.Regex.IsMatch(ip, ipv4Pattern))
+        {
+            yield return "Please enter a valid IPv4 address (e.g., 192.168.1.1)";
+        }
+    }
+
+    private async Task CreateWorld()
+    {
+        await form.Validate();
+
+        if (!success)
+        {
+            return;
+        }
+
+        var request = new CreateWorldRequest
+        {
+            Name = NewWorld.Name,
+            Ip = NewWorld.Ip,
+            Port = NewWorld.Port,
+            Region = NewWorld.Region,
+            PvpType = NewWorld.PvpType,
+            WorldType = NewWorld.WorldType,
+            RequiresPremium = NewWorld.RequiresPremium,
+            TransferEnabled = NewWorld.TransferEnabled,
+            AntiCheatEnabled = NewWorld.AntiCheatEnabled,
+            MaxCapacity = NewWorld.MaxCapacity
+        };
+
+        var response = await Mediator.Send(request);
+
+        if (response.IsSuccess)
+        {
+            Snackbar.Add("World created successfully!", Severity.Success);
+            NewWorld = new WorldModel(); // Reset form
+            reloadKey++; // Trigger table reload
+            StateHasChanged();
+        }
+        else
+        {
+            Snackbar.Add($"Error creating world: {response.ErrorMessage}", Severity.Error);
+        }
+    }
+
+    private async Task DeleteWorld(WorldResponseViewModel world)
+    {
+        var result = await DialogService.ShowMessageBox(
+            "Confirm Delete",
+            $"Are you sure you want to delete the world '{world.Name}'? This action cannot be undone.",
+            yesText: "Delete",
+            cancelText: "Cancel");
+
+        if (result == true)
+        {
+            var request = new DeleteWorldCommandRequest { Id = world.Id };
+            var response = await Mediator.Send(request);
+
+            if (response.IsSuccess)
+            {
+                Snackbar.Add("World deleted successfully!", Severity.Success);
+                reloadKey++; // Trigger table reload
+                StateHasChanged();
+            }
+            else
+            {
+                Snackbar.Add($"Error deleting world: {response.ErrorMessage}", Severity.Error);
+            }
+        }
     }
 
 }

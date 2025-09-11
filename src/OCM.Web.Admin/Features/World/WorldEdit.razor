@@ -1,108 +1,173 @@
 @page "/worlds/{worldId:int}/edit"
+@using OCM.Application.Requests.Queries
+@using OCM.Application.Requests.Commands
+@using OCM.Application.Response.World
+@using OCM.Infrastructure.Entities
+@using MediatR
+@using MudBlazor
 
 @inject NavigationManager NavManager
 
 <MudPaper Class="pa-6">
+    <MudForm @ref="form" @bind-IsValid="@success">
+        <MudGrid Spacing="3">
+            <MudItem xs="12" sm="6" md="3">
+                <MudTextField Label="Name" @bind-Value="World.Name" Variant="Variant.Outlined" Required="true" RequiredError="Name is required"/>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudTextField Label="IP Address" @bind-Value="World.Ip" Variant="Variant.Outlined" Required="true" RequiredError="IP Address is required" Validation="@ValidateIPv4"/>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="2">
+                <MudNumericField Label="Port" @bind-Value="World.Port" Variant="Variant.Outlined" Min="1" Max="65535" Required="true" RequiredError="Port is required"/>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="2">
+                <MudNumericField Label="Max Capacity" @bind-Value="World.MaxCapacity" Variant="Variant.Outlined" Min="1" Required="true" RequiredError="Max Capacity is required"/>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="2">
+                <MudSelect Label="Location" T="Region" @bind-Value="World.Region" Variant="Variant.Outlined">
+                    <MudSelectItem Value="Region.SouthAmerica">South America</MudSelectItem>
+                    <MudSelectItem Value="Region.NorthAmerica">North America</MudSelectItem>
+                    <MudSelectItem Value="Region.Europe">Europe</MudSelectItem>
+                    <MudSelectItem Value="Region.Africa">Africa</MudSelectItem>
+                    <MudSelectItem Value="Region.Asia">Asia</MudSelectItem>
+                    <MudSelectItem Value="Region.Australia">Australia</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="2">
+                <MudSelect Label="PvP Type" T="PvpType" @bind-Value="World.PvpType" Variant="Variant.Outlined">
+                    <MudSelectItem Value="PvpType.Open">Open PvP</MudSelectItem>
+                    <MudSelectItem Value="PvpType.Optional">Optional PvP</MudSelectItem>
+                    <MudSelectItem Value="PvpType.HardCore">Hardcore PvP</MudSelectItem>
+                    <MudSelectItem Value="PvpType.RetroOpen">Retro Open PvP</MudSelectItem>
+                    <MudSelectItem Value="PvpType.RetroHardCore">Retro Hardcore PvP</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="2">
+                <MudSelect Label="World Type" T="WorldType" @bind-Value="World.WorldType" Variant="Variant.Outlined">
+                    <MudSelectItem Value="WorldType.Regular">Regular</MudSelectItem>
+                    <MudSelectItem Value="WorldType.Experimental">Experimental</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="2">
+                <MudCheckBox T="bool" Label="Requires Premium" @bind-Checked="World.RequiresPremium" />
+            </MudItem>
+            <MudItem xs="12" sm="6" md="2">
+                <MudCheckBox T="bool" Label="Transfer Enabled" @bind-Checked="World.TransferEnabled" />
+            </MudItem>
+            <MudItem xs="12" sm="6" md="2">
+                <MudCheckBox T="bool" Label="Anti-Cheat Enabled" @bind-Checked="World.AntiCheatEnabled" />
+            </MudItem>
 
-    <MudGrid Spacing="3">
-        <MudItem xs="12" sm="6" md="3">
-            <MudTextField Label="Name" @bind-Value="World.Name" Variant="Variant.Outlined"/>
-        </MudItem>
-        <MudItem xs="12" sm="6" md="3">
-            <MudTextField Label="IP Address" @bind-Value="World.IpAddress" Variant="Variant.Outlined"/>
-        </MudItem>
-        <MudItem xs="12" sm="6" md="2">
-            <MudTextField Label="Port" @bind-Value="World.Port" Variant="Variant.Outlined"/>
-        </MudItem>
-        <MudItem xs="12" sm="6" md="4">
-            <MudSelect Label="Battle-Eye" T="string" @bind-Value="World.BattleEye" Variant="Variant.Outlined">
-                <MudSelectItem Value="@("Not protected by BattlEye.")">Not protected by BattlEye.</MudSelectItem>
-                <MudSelectItem Value="@("Protected by BattlEye.")">Protected by BattlEye.</MudSelectItem>
-            </MudSelect>
-        </MudItem>
-
-        <MudItem xs="12" sm="6" md="2">
-            <MudSelect Label="Location" T="string" @bind-Value="World.Location" Variant="Variant.Outlined">
-                <MudSelectItem Value="@("South America")">South America</MudSelectItem>
-                <MudSelectItem Value="@("North America")">North America</MudSelectItem>
-                <MudSelectItem Value="@("Europe")">Europe</MudSelectItem>
-                <MudSelectItem Value="@("All")">All</MudSelectItem>
-            </MudSelect>
-        </MudItem>
-        <MudItem xs="12" sm="6" md="2">
-            <MudSelect Label="Pvp Type" T="string" @bind-Value="World.PvpType" Variant="Variant.Outlined">
-                <MudSelectItem Value="@("Open PvP")">Open PvP</MudSelectItem>
-                <MudSelectItem Value="@("Optional PvP")">Optional PvP</MudSelectItem>
-                <MudSelectItem Value="@("Hardcore PvP")">Hardcore PvP</MudSelectItem>
-            </MudSelect>
-        </MudItem>
-        <MudItem xs="12" sm="6" md="2">
-            <MudSelect Label="Premium Type" T="string" @bind-Value="World.PremiumType" Variant="Variant.Outlined">
-                <MudSelectItem Value="@("free")">Free</MudSelectItem>
-                <MudSelectItem Value="@("premium")">Premium</MudSelectItem>
-            </MudSelect>
-        </MudItem>
-        <MudItem xs="12" sm="6" md="2">
-            <MudSelect Label="Transfer Type" T="string" @bind-Value="World.TransferType" Variant="Variant.Outlined">
-                <MudSelectItem Value="@("blocked")">Blocked</MudSelectItem>
-                <MudSelectItem Value="@("open")">Open</MudSelectItem>
-            </MudSelect>
-        </MudItem>
-        <MudItem xs="12" sm="6" md="2">
-            <MudSelect Label="World Type" T="string" @bind-Value="World.WorldType" Variant="Variant.Outlined">
-                <MudSelectItem Value="@("Regular")">Regular</MudSelectItem>
-                <MudSelectItem Value="@("Experimental")">Experimental</MudSelectItem>
-            </MudSelect>
-        </MudItem>
-
-        <MudItem xs="12" sm="3">
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="UpdateWorld">Update World</MudButton>
-        </MudItem>
-    </MudGrid>
-
+            <MudItem xs="12" sm="3">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="UpdateWorld" Disabled="@(!success)">Update World</MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudForm>
 </MudPaper>
 
 @code {
+    [Inject] private IMediator Mediator { get; set; }
+    [Inject] private ISnackbar Snackbar { get; set; }
+
     [Parameter] public int worldId { get; set; }
 
     private WorldModel World = new();
+    private MudForm form;
+    private bool success;
 
     protected override async Task OnInitializedAsync()
     {
-        // Simulate loading from backend (replace with real API call)
-        var allWorlds = GetWorldsFromServer(); // replace with service
-        World = allWorlds.FirstOrDefault(w => w.Id == worldId) ?? new WorldModel();
-    }
+        var request = new GetWorldByIdRequest { Id = worldId };
+        var response = await Mediator.Send(request);
 
-    private void UpdateWorld()
-    {
-        // TODO: Call backend to persist changes
-        Console.WriteLine($"World '{World.Name}' updated.");
-        NavManager.NavigateTo("/worlds");
-    }
-
-    // TEMP: Fake backend data
-    private List<WorldModel> GetWorldsFromServer()
-    {
-        return new List<WorldModel>
+        if (response is not null)
         {
-            new() { Id = 1, Name = "LocalHost", IpAddress = "127.0.0.1", Port = "7172", Location = "South America", PvpType = "Open PvP", PremiumType = "premium", TransferType = "blocked", BattleEye = "Not protected by BattlEye.", WorldType = "Regular" },
-            new() { Id = 2, Name = "Dev Test", IpAddress = "206.42.57.225", Port = "7172", Location = "South America", PvpType = "Open PvP", PremiumType = "premium", TransferType = "blocked", BattleEye = "Not protected by BattlEye.", WorldType = "Regular" }
+            World = new WorldModel
+            {
+                Id = response.Id,
+                Name = response.Name,
+                Ip = response.Ip,
+                Port = response.Port,
+                Region = response.Region,
+                PvpType = response.PvpType,
+                WorldType = response.WorldType,
+                RequiresPremium = response.RequiresPremium,
+                TransferEnabled = response.TransferEnabled,
+                AntiCheatEnabled = response.AntiCheatEnabled,
+                MaxCapacity = response.MaxCapacity
+            };
+        }
+        else
+        {
+            Snackbar.Add("World not found!", Severity.Error);
+            NavManager.NavigateTo("/worlds");
+        }
+    }
+
+    private async Task UpdateWorld()
+    {
+        await form.Validate();
+
+        if (!success)
+        {
+            return;
+        }
+
+        var request = new UpdateWorldRequest
+        {
+            Id = World.Id,
+            Name = World.Name,
+            Ip = World.Ip,
+            Port = World.Port,
+            Region = World.Region,
+            PvpType = World.PvpType,
+            WorldType = World.WorldType,
+            RequiresPremium = World.RequiresPremium,
+            TransferEnabled = World.TransferEnabled,
+            AntiCheatEnabled = World.AntiCheatEnabled,
+            MaxCapacity = World.MaxCapacity
         };
+
+        var response = await Mediator.Send(request);
+
+        if (response.IsSuccess)
+        {
+            Snackbar.Add("World updated successfully!", Severity.Success);
+            NavManager.NavigateTo("/worlds");
+        }
+        else
+        {
+            Snackbar.Add($"Error updating world: {response.ErrorMessage}", Severity.Error);
+        }
+    }
+
+    private IEnumerable<string> ValidateIPv4(string ip)
+    {
+        if (string.IsNullOrWhiteSpace(ip))
+            yield break;
+
+        // IPv4 regex pattern
+        var ipv4Pattern = @"^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$";
+
+        if (!System.Text.RegularExpressions.Regex.IsMatch(ip, ipv4Pattern))
+        {
+            yield return "Please enter a valid IPv4 address (e.g., 192.168.1.1)";
+        }
     }
 
     public class WorldModel
     {
         public int Id { get; set; }
         public string Name { get; set; }
-        public string IpAddress { get; set; }
-        public string Port { get; set; }
-        public string Location { get; set; }
-        public string PvpType { get; set; }
-        public string PremiumType { get; set; }
-        public string TransferType { get; set; }
-        public string BattleEye { get; set; }
-        public string WorldType { get; set; }
+        public string Ip { get; set; } = "127.0.0.1";
+        public int Port { get; set; } = 7172;
+        public Region Region { get; set; } = Region.SouthAmerica;
+        public PvpType PvpType { get; set; } = PvpType.Open;
+        public bool RequiresPremium { get; set; } = true;
+        public bool TransferEnabled { get; set; } = false;
+        public bool AntiCheatEnabled { get; set; } = false;
+        public WorldType WorldType { get; set; } = WorldType.Regular;
+        public int MaxCapacity { get; set; } = 1000;
     }
 
 }
