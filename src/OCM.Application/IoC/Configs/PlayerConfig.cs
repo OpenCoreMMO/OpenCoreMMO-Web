@@ -1,6 +1,6 @@
 ﻿using OCM.Infrastructure.Models;
 
-namespace NeoServer.Web.API.IoC.Configs;
+namespace OCM.Application.IoC.Configs;
 
 public class PlayerConfig
 {

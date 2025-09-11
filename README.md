@@ -33,25 +33,40 @@ dotnet run --project "OCM.Web.Admin"
 You can run all tests from your IDE or via terminal:
 
 ```sh
-dotnet test NeoServer.WebApi.Tests/NeoServer.WebApi.Tests.csproj
+dotnet test
 ```
 
 ---
 
 ## 🧩 Project Structure
 
-- **NeoServer.WebApi** – Main ASP.NET Core Web API project
-- **NeoServer.WebApi.Tests** – API endpoint and integration tests
-- **NeoServer.Core** – Core business logic and domain models
-- **NeoServer.Infrastructure** – Data access and external integrations
-- **NeoServer.Application** – Application layer for use cases and orchestration
-- **NeoServer.Shared** – Shared utilities and abstractions
+- **OCM.Web.Admin** – Main ASP.NET Core Blazor Server admin interface
+- **OCM.WebApi** – ASP.NET Core Web API project
+- **OCM.Application** – Application layer with use cases, commands, and queries
+- **OCM.Data** – Data access layer with repositories and entities
+- **OCM.IoC** – Dependency injection configuration
+- **tests/** – Unit and integration tests
 
 ---
 
 ## ✨ Features
 
-- Todo..
+### 🌍 World Management
+- **List Worlds**: Paginated display with server-side data loading
+- **Create World**: Full form with validation and duplicate prevention
+- **Edit World**: Load and update existing worlds with API integration
+- **Delete World**: Confirmation dialogs with soft delete support
+
+### 🏠 Admin Interface
+- **Modern UI**: Clean, responsive design with MudBlazor
+- **Form Validation**: Required fields and IPv4 format validation
+- **User Feedback**: Toast notifications and error handling
+- **Navigation**: Intuitive routing between management sections
+
+### 🔧 Technical Features
+- **Clean Architecture**: CQRS with MediatR, Repository pattern
+- **Data Integrity**: Soft deletes, unique constraints, type safety
+- **API Integration**: Full CRUD operations with proper error handling
 
 ---
 

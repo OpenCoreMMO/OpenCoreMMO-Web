@@ -1,0 +1,222 @@
+@page "/guilds/{guildId:int}/edit"
+@using OCM.Application.Requests.Queries
+@using OCM.Application.Requests.Commands
+@using OCM.Application.Response.Guild
+@using OCM.Application.Requests.Commands
+@using OCM.Application.Requests.Commands.Guild
+@using MediatR
+@using MudBlazor
+
+@inject NavigationManager NavManager
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+<!-- Header Area -->
+<div class="d-flex justify-space-between align-center mb-4">
+    <div>
+        <MudText Typo="Typo.h4">Edit Guild</MudText>
+        <MudText Typo="Typo.body2" Color="Color.Secondary">Home > Guilds > Edit</MudText>
+    </div>
+</div>
+
+    <MudForm @ref="form" @bind-IsValid="@success">
+        <!-- Guild Info Panel -->
+        <MudPaper Class="pa-4 mb-4" Elevation="1">
+            <MudGrid Spacing="3">
+                <!-- Left Section: Guild Info -->
+                <MudItem xs="12" md="6">
+                    <div class="d-flex align-center mb-3">
+                        <MudAvatar Size="Size.Large" Class="mr-3">
+                            <MudIcon Icon="@Icons.Material.Filled.Shield" Size="Size.Large" />
+                        </MudAvatar>
+                        <MudTextField Label="Guild Name" @bind-Value="Guild.Name" Variant="Variant.Outlined" Required="true" RequiredError="Name is required" />
+                    </div>
+
+                    <MudGrid Spacing="3">
+                        <MudItem xs="12" sm="6">
+                            <MudTextField Label="Owner" @bind-Value="Guild.OwnerName" Variant="Variant.Outlined" ReadOnly="true" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField Label="Balance" @bind-Value="Guild.BankAmount" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudNumericField Label="Level" @bind-Value="Guild.Level" Variant="Variant.Outlined" Min="1" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudNumericField Label="Points" @bind-Value="Guild.Points" Variant="Variant.Outlined" Min="0" />
+                        </MudItem>
+                    </MudGrid>
+                </MudItem>
+
+                <!-- Right Section: Description -->
+                <MudItem xs="12" md="6" Class="d-flex flex-column">
+                    <MudTextField Label="Description" @bind-Value="Guild.Description" Variant="Variant.Outlined"
+                                  Lines="12" Class="flex-grow-1" />
+                </MudItem>
+            </MudGrid>
+        </MudPaper>
+
+        <!-- Action Buttons -->
+        <MudPaper Class="pa-4 mb-4" Elevation="1">
+            <div class="d-flex justify-start gap-3">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="UpdateGuild" Disabled="@(!success)">
+                    Save Changes
+                </MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="DeleteGuild">
+                    Delete Guild
+                </MudButton>
+            </div>
+        </MudPaper>
+
+        <!-- Bottom Section -->
+        <MudGrid Spacing="3">
+            <!-- Membership Box -->
+            <MudItem xs="12" md="6">
+                <MudPaper Class="pa-4" Elevation="1">
+                    <MudText Typo="Typo.h6" Class="mb-3">Membership</MudText>
+                    @if (Members.Any())
+                    {
+                        <MudTable T="GuildMembershipViewModel" Items="@Members" Dense="true" Hover="true" Bordered="false" Class="mt-4">
+                            <HeaderContent>
+                                <MudTh>Name</MudTh>
+                                <MudTh>Nick</MudTh>
+                                <MudTh>Rank</MudTh>
+                                <MudTh align="right">Action</MudTh>
+                            </HeaderContent>
+                            <RowTemplate>
+                                <MudTd DataLabel="Name">@context.PlayerName</MudTd>
+                                <MudTd DataLabel="Nick">@context.Nick</MudTd>
+                                <MudTd DataLabel="Rank">@context.RankName</MudTd>
+                                <MudTd align="right" DataLabel="Action">
+                                    <MudButton Variant="Variant.Text" Color="Color.Error" Size="Size.Small" OnClick="() => RemoveMember(context)">
+                                        Delete
+                                    </MudButton>
+                                </MudTd>
+                            </RowTemplate>
+                        </MudTable>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">No members found for this guild</MudText>
+                    }
+                </MudPaper>
+            </MudItem>
+
+            <!-- Invited Box -->
+            <MudItem xs="12" md="6">
+                <MudPaper Class="pa-4" Elevation="1">
+                    <MudText Typo="Typo.h6" Class="mb-3">Invited</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">No invited members data available</MudText>
+                    <!-- Placeholder for invited table -->
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+    </MudForm>
+
+@code {
+    [Parameter] public int guildId { get; set; }
+
+    private GuildResponseViewModel Guild = new();
+    private List<GuildMembershipViewModel> Members = new();
+    private MudForm form;
+    private bool success;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var request = new GetGuildByIdRequest { Id = guildId };
+        var response = await Mediator.Send(request);
+
+        if (response is not null)
+        {
+            Guild = response;
+            // Populate members
+            if (response.Members != null)
+            {
+                Members = response.Members.Select(m => new GuildMembershipViewModel
+                {
+                    PlayerId = m.PlayerId,
+                    PlayerName = m.Player?.Name ?? "Unknown",
+                    Nick = m.Nick,
+                    RankName = m.Rank?.Name ?? "Unknown"
+                }).ToList();
+            }
+        }
+        else
+        {
+            Snackbar.Add("Guild not found!", Severity.Error);
+            NavManager.NavigateTo("/guilds");
+        }
+    }
+
+    private async Task UpdateGuild()
+    {
+        await form.Validate();
+
+        if (!success)
+        {
+            return;
+        }
+
+        var request = new UpdateGuildRequest
+        {
+            Id = Guild.Id,
+            Name = Guild.Name,
+            Description = Guild.Description,
+            Level = Guild.Level,
+            Points = Guild.Points,
+            BankAmount = Guild.BankAmount
+        };
+
+        var response = await Mediator.Send(request);
+
+        if (response.IsSuccess)
+        {
+            Snackbar.Add("Guild updated successfully!", Severity.Success);
+            NavManager.NavigateTo("/guilds");
+        }
+        else
+        {
+            Snackbar.Add($"Error updating guild: {response.ErrorMessage}", Severity.Error);
+        }
+    }
+
+    private async Task DeleteGuild()
+    {
+        var result = await DialogService.ShowMessageBox(
+            "Delete Guild",
+            $"Are you sure you want to delete the guild '{Guild.Name}'? This action cannot be undone.",
+            yesText: "Delete",
+            cancelText: "Cancel");
+
+        if (result == true)
+        {
+            var request = new DeleteGuildRequest { Id = Guild.Id };
+            var response = await Mediator.Send(request);
+
+            if (response.IsSuccess)
+            {
+                Snackbar.Add("Guild deleted successfully!", Severity.Success);
+                NavManager.NavigateTo("/guilds");
+            }
+            else
+            {
+                Snackbar.Add($"Error deleting guild: {response.ErrorMessage}", Severity.Error);
+            }
+        }
+    }
+
+    private async Task RemoveMember(GuildMembershipViewModel member)
+    {
+        // TODO: Implement remove member functionality
+        Snackbar.Add("Remove member functionality not implemented yet", Severity.Warning);
+    }
+
+    public class GuildMembershipViewModel
+    {
+        public int PlayerId { get; set; }
+        public string PlayerName { get; set; }
+        public string Nick { get; set; }
+        public string RankName { get; set; }
+    }
+}

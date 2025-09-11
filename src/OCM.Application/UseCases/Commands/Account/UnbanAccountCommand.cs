@@ -4,7 +4,7 @@ using OCM.Application.Response;
 using OCM.Application.Response.Constants;
 using OCM.Infrastructure.Interfaces;
 
-namespace OCM.Application.UseCases.Commands;
+namespace OCM.Application.UseCases.Commands.Account;
 
 public class UnbanAccountCommand(IAccountRepository accountRepository)
     : IRequestHandler<UnbanAccountRequest, OutputResponse>

@@ -1,4 +1,4 @@
-﻿using NeoServer.Web.API.IoC.Configs;
+﻿using OCM.Application.IoC.Configs;
 
 namespace NeoServer.Web.API.IoC.Modules;
 

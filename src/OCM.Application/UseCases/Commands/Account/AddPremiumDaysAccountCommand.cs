@@ -5,7 +5,7 @@ using OCM.Application.Response.Constants;
 using OCM.Infrastructure.Entities;
 using OCM.Infrastructure.Interfaces;
 
-namespace OCM.Application.UseCases.Commands;
+namespace OCM.Application.UseCases.Commands.Account;
 
 public class AddPremiumDaysAccountCommand(
     IAccountRepository accountRepository,

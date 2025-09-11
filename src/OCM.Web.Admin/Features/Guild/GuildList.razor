@@ -1,0 +1,54 @@
+@page "/Guilds"
+@using OCM.Application.Requests.Queries
+@using OCM.Application.Response.Guild
+@using MediatR
+@using MudBlazor
+
+<MudPaper Class="mx-auto mt-4" Elevation="2">
+    <div class="pa-4">
+        <MudText Typo="Typo.h6">Guilds</MudText>
+        <MudText Typo="Typo.subtitle2" Color="Color.Secondary">List of all created guilds</MudText>
+    </div>
+    <MudTable T="GuildResponseViewModel" @key="reloadKey" ServerData="ServerReload" Dense="true" Hover="true" Bordered="false" Class="mt-4">
+        <HeaderContent>
+            <MudTh>#</MudTh>
+            <MudTh>Name</MudTh>
+            <MudTh>Owner</MudTh>
+            <MudTh>Members</MudTh>
+            <MudTh>Bank Amount</MudTh>
+            <MudTh>Created</MudTh>
+            <MudTh align="right">Action</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="#">@context.Id</MudTd>
+            <MudTd DataLabel="Name">@context.Name</MudTd>
+            <MudTd DataLabel="Owner">@context.OwnerName</MudTd>
+            <MudTd DataLabel="Members">@context.MemberCount</MudTd>
+            <MudTd DataLabel="Bank Amount">@context.BankAmount.ToString("N0") gold</MudTd>
+            <MudTd DataLabel="Created">@context.CreatedAt.ToString("yyyy-MM-dd")</MudTd>
+            <MudTd align="right">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mr-2" Href="@($"guilds/{context.Id}/edit")">
+                    Edit
+                </MudButton>
+            </MudTd>
+        </RowTemplate>
+    <PagerContent>
+        <MudTablePager />
+    </PagerContent>
+    </MudTable>
+</MudPaper>
+
+@code {
+
+    [Inject] private IMediator Mediator { get; set; }
+
+    private int reloadKey = 0;
+
+    private async Task<TableData<GuildResponseViewModel>> ServerReload(TableState state, CancellationToken token)
+    {
+        var request = new GetGuildsRequest { Page = state.Page + 1, Limit = state.PageSize };
+        var response = await Mediator.Send(request, token);
+        return new TableData<GuildResponseViewModel> { TotalItems = response.TotalRecords, Items = response.Data };
+    }
+
+}

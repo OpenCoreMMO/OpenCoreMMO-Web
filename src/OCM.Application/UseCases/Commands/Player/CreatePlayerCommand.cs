@@ -1,15 +1,14 @@
 ﻿using MediatR;
 using Microsoft.Extensions.Options;
-using NeoServer.Web.API.IoC.Configs;
+using OCM.Application.IoC.Configs;
 using OCM.Application.Requests.Commands;
 using OCM.Application.Response;
 using OCM.Application.Response.Constants;
 using OCM.Infrastructure.Entities;
 using OCM.Infrastructure.Interfaces;
 using OCM.Infrastructure.Models;
-using System;
 
-namespace OCM.Application.UseCases.Commands;
+namespace OCM.Application.UseCases.Commands.Player;
 
 public class CreatePlayerCommand(IPlayerRepository playerRepository, IOptions<PlayerConfig> config)
     : IRequestHandler<CreatePlayerRequest, OutputResponse>
