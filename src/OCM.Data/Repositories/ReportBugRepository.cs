@@ -1,4 +1,7 @@
-﻿using System.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using OCM.Infrastructure.Contexts;
@@ -22,5 +25,16 @@ public class ReportBugRepository : BaseRepository<ReportBugEntity>, IReportBugRe
             .Where(x => x.PlayerId == playerId && x.ClosedAt == null)
             .OrderByDescending(x => x.CreatedAt)
             .FirstOrDefaultAsync();
+    }
+
+    public async Task<IEnumerable<ReportBugEntity>> GetPaginatedBugReportsAsync(Expression<Func<ReportBugEntity, bool>> filter, int page, int limit)
+    {
+        await using var context = NewDbContext;
+        return await context.ReportBugs
+            .Where(filter)
+            .OrderByDescending(x => x.CreatedAt)
+            .Skip((page - 1) * limit)
+            .Take(limit)
+            .ToListAsync();
     }
 }

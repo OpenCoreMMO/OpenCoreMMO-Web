@@ -1,0 +1,197 @@
+@page "/bug-reports"
+@using OCM.Application.Requests.Queries
+@using OCM.Application.Requests.Commands
+@using OCM.Application.Response.BugReports
+@using OCM.Application.Response.Player
+@using MediatR
+@using MudBlazor
+
+<MudPaper Class="mx-auto mt-4" Elevation="2">
+    <div class="pa-4">
+        <MudText Typo="Typo.h6">Bug Reports</MudText>
+        <MudText Typo="Typo.subtitle2" Color="Color.Secondary">List of all bug reports</MudText>
+    </div>
+
+    <!-- Filters Section -->
+    <MudCard Class="mx-0">
+        <MudCardContent>
+            <MudGrid>
+                <MudItem xs="12" sm="6" md="3">
+                    <MudAutocomplete T="PlayerResponseViewModel"
+                                     Label="Player Name"
+                                     @bind-Value="selectedPlayer"
+                                     SearchFunc="SearchPlayers"
+                                     ToStringFunc="@(p => p?.Name ?? string.Empty)"
+                                     Variant="Variant.Outlined"
+                                     Dense="true"
+                                     Clearable="true"
+                                     ResetValueOnEmptyText="true" />
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+                    <MudDatePicker @bind-Date="filterCreatedFrom" Label="Created From" />
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+                    <MudDatePicker @bind-Date="filterCreatedTo" Label="Created To" />
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+                    <MudSelect @bind-Value="filterStatus" Label="Status" Variant="Variant.Outlined">
+                        <MudSelectItem Value="@("all")">All</MudSelectItem>
+                        <MudSelectItem Value="@("opened")">Opened</MudSelectItem>
+                        <MudSelectItem Value="@("closed")">Closed</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+                    <MudDatePicker @bind-Date="filterClosedFrom" Label="Closed From" />
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+                    <MudDatePicker @bind-Date="filterClosedTo" Label="Closed To" />
+                </MudItem>
+            </MudGrid>
+
+            <!-- Filter Buttons at Bottom -->
+            <MudGrid Class="mt-4">
+                <MudItem xs="12" Class="d-flex justify-end gap-2">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ApplyFilters">Apply Filters</MudButton>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="ClearFilters">Clear Filters</MudButton>
+                </MudItem>
+            </MudGrid>
+        </MudCardContent>
+    </MudCard>
+
+    <MudTable T="BugReportResponseViewModel" @ref="table" ServerData="ServerReload" Dense="true" Hover="true" Bordered="false" Class="mt-4">
+        <HeaderContent>
+            <MudTh>ID</MudTh>
+            <MudTh>Player</MudTh>
+            <MudTh>Reason</MudTh>
+            <MudTh>IP</MudTh>
+            <MudTh>Position</MudTh>
+            <MudTh>Created</MudTh>
+            <MudTh>Closed</MudTh>
+            <MudTh>Status</MudTh>
+            <MudTh align="right">Action</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="ID">@context.Id</MudTd>
+            <MudTd DataLabel="Player">
+                <MudLink Href="@($"/player/{context.PlayerId}")" Color="Color.Primary" Underline="Underline.Always">
+                    @context.PlayerName
+                </MudLink>
+            </MudTd>
+            <MudTd DataLabel="Reason">@context.Reason</MudTd>
+            <MudTd DataLabel="IP">@context.Ip</MudTd>
+            <MudTd DataLabel="Position">@($"{context.PosX}, {context.PosY}, {context.PosZ}")</MudTd>
+            <MudTd DataLabel="Created">@(context.CreatedAt.ToLocalTime().ToString("MMM dd, yyyy hh:mm tt"))</MudTd>
+            <MudTd DataLabel="Closed">@(context.ClosedAt.HasValue ? context.ClosedAt.Value.ToLocalTime().ToString("MMM dd, yyyy hh:mm tt") : "N/A")</MudTd>
+            <MudTd DataLabel="Status">
+                <MudChip T="string" Color="@(context.IsClosed ? Color.Success : Color.Warning)" Size="Size.Small">
+                    @(context.IsClosed ? "Closed" : "Open")
+                </MudChip>
+            </MudTd>
+            <MudTd align="right">
+                @if (!context.IsClosed)
+                {
+                    <MudButton Variant="Variant.Outlined" Color="Color.Error" OnClick="() => CloseBugReport(context.Id)">
+                        Close Bug
+                    </MudButton>
+                }
+            </MudTd>
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager />
+        </PagerContent>
+    </MudTable>
+</MudPaper>
+
+@code {
+
+    [Inject] private IMediator Mediator { get; set; }
+    [Inject] private IDialogService DialogService { get; set; }
+    [Inject] private ISnackbar Snackbar { get; set; }
+
+    private MudTable<BugReportResponseViewModel> table;
+
+    // Filter properties
+    private PlayerResponseViewModel selectedPlayer;
+    private DateTime? filterCreatedFrom;
+    private DateTime? filterCreatedTo;
+    private DateTime? filterClosedFrom;
+    private DateTime? filterClosedTo;
+    private string filterStatus = "all";
+
+    private async Task<TableData<BugReportResponseViewModel>> ServerReload(TableState state, CancellationToken token)
+    {
+        var request = new GetBugReportsRequest
+        {
+            PlayerId = selectedPlayer != null ? (uint?)selectedPlayer.Id : null,
+            CreatedFrom = filterCreatedFrom,
+            CreatedTo = filterCreatedTo,
+            ClosedFrom = filterClosedFrom,
+            ClosedTo = filterClosedTo,
+            Status = filterStatus,
+            Page = state.Page + 1,
+            Limit = state.PageSize
+        };
+
+        var response = await Mediator.Send(request, token);
+        return new TableData<BugReportResponseViewModel> { TotalItems = response.TotalRecords, Items = response.Data };
+    }
+
+    private async Task CloseBugReport(long bugReportId)
+    {
+        var result = await DialogService.ShowMessageBox(
+            "Confirm Close Bug Report",
+            "Are you sure you want to close this bug report?",
+            yesText: "Close",
+            cancelText: "Cancel");
+
+        if (result == true)
+        {
+            var closeRequest = new CloseBugRequest();
+            closeRequest.SetBugReportId(bugReportId);
+
+            var response = await Mediator.Send(closeRequest);
+
+            if (response.IsSuccess)
+            {
+                Snackbar.Add("Bug report closed successfully!", Severity.Success);
+                await table.ReloadServerData();
+            }
+            else
+            {
+                Snackbar.Add($"Error closing bug report: {response.ErrorMessage}", Severity.Error);
+            }
+        }
+    }
+
+    private async Task ApplyFilters()
+    {
+        await table.ReloadServerData();
+    }
+
+    private async Task ClearFilters()
+    {
+        selectedPlayer = null;
+        filterCreatedFrom = null;
+        filterCreatedTo = null;
+        filterClosedFrom = null;
+        filterClosedTo = null;
+        filterStatus = "all";
+        await table.ReloadServerData();
+    }
+
+    private async Task<IEnumerable<PlayerResponseViewModel>> SearchPlayers(string searchTerm, CancellationToken token)
+    {
+        if (string.IsNullOrWhiteSpace(searchTerm) || searchTerm.Length < 2)
+            return new List<PlayerResponseViewModel>();
+
+        var request = new SearchPlayersRequest
+        {
+            SearchTerm = searchTerm,
+            MaxResults = 10
+        };
+
+        var players = await Mediator.Send(request, token);
+        return players;
+    }
+
+}

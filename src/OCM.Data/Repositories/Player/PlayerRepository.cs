@@ -86,4 +86,14 @@ public class PlayerRepository : BaseRepository<PlayerEntity>, IPlayerRepository
         var skip = (page - 1) * limit;
         return await neoContext.Players.Where(filter).Skip(skip).Take(limit).ToListAsync();
     }
+
+    public async Task<IEnumerable<PlayerEntity>> SearchPlayersByNameAsync(string searchTerm, int maxResults)
+    {
+        await using var context = NewDbContext;
+        return await context.Players
+            .Where(p => p.Name.ToLower().StartsWith(searchTerm.ToLower()))
+            .OrderBy(p => p.Name)
+            .Take(maxResults)
+            .ToListAsync();
+    }
 }

@@ -23,4 +23,5 @@ public interface IPlayerRepository : IBaseRepositoryNeo<PlayerEntity>
         int limit);
 
     Task<PlayerEntity> GetById(int id);
+    Task<IEnumerable<PlayerEntity>> SearchPlayersByNameAsync(string searchTerm, int maxResults);
 }

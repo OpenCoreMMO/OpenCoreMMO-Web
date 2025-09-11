@@ -14,6 +14,8 @@ public static class ErrorMessage
     public static string WorldAlreadyDeleted => "World already was deleted successfully.";
     public static string WorldNotFound => "World not found.";
     public static string WorldAlreadyExist => "World already exist.";
+    public static string BugReportNotFound => "Bug report not found.";
+    public static string BugReportAlreadyClosed => "Bug report already closed.";
 }
 
 public static class SuccessMessage
