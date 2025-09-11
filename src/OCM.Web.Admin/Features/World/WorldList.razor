@@ -91,10 +91,10 @@
             <MudTd>@(context.AntiCheatEnabled ? "Protected by BattlEye." : "Not protected by BattlEye.")</MudTd>
             <MudTd>@context.WorldType</MudTd>
             <MudTd>
-                <MudButton Color="Color.Primary" Size="Size.Small" Class="me-2" Href="@($"worlds/{context.Id}/edit")">
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" Class="me-2" Href="@($"worlds/{context.Id}/edit")">
                     Edit
                 </MudButton>
-                <MudButton Color="Color.Error" Size="Size.Small" OnClick="@(() => DeleteWorld(context))" DisableElevation="true">Delete
+                <MudButton Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small" OnClick="@(() => DeleteWorld(context))" DisableElevation="true">Delete
                 </MudButton>
             </MudTd>
         </RowTemplate>

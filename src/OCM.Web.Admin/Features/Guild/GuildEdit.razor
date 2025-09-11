@@ -77,7 +77,7 @@
                     <MudText Typo="Typo.h6" Class="mb-3">Membership</MudText>
                     @if (Members.Any())
                     {
-                        <MudTable T="GuildMembershipViewModel" Items="@Members" Dense="true" Hover="true" Bordered="false" Class="mt-4">
+                        <MudTable T="GuildMembershipViewModel" Items="@Members" Dense="true" Hover="true" Bordered="false" Class="mt-4" RowsPerPage="5">
                             <HeaderContent>
                                 <MudTh>Name</MudTh>
                                 <MudTh>Nick</MudTh>
@@ -89,11 +89,14 @@
                                 <MudTd DataLabel="Nick">@context.Nick</MudTd>
                                 <MudTd DataLabel="Rank">@context.RankName</MudTd>
                                 <MudTd align="right" DataLabel="Action">
-                                    <MudButton Variant="Variant.Text" Color="Color.Error" Size="Size.Small" OnClick="() => RemoveMember(context)">
+                                    <MudButton Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small" OnClick="() => RemoveMember(context)">
                                         Delete
                                     </MudButton>
                                 </MudTd>
                             </RowTemplate>
+                            <PagerContent>
+                                <MudTablePager />
+                            </PagerContent>
                         </MudTable>
                     }
                     else
@@ -208,8 +211,45 @@
 
     private async Task RemoveMember(GuildMembershipViewModel member)
     {
-        // TODO: Implement remove member functionality
-        Snackbar.Add("Remove member functionality not implemented yet", Severity.Warning);
+        var result = await DialogService.ShowMessageBox(
+            "Remove Member",
+            $"Are you sure you want to remove '{member.PlayerName}' from the guild?",
+            yesText: "Remove",
+            cancelText: "Cancel");
+
+        if (result == true)
+        {
+            var request = new RemoveGuildMemberRequest();
+            request.SetGuildId(guildId);
+            request.SetPlayerId(member.PlayerId);
+
+            var response = await Mediator.Send(request);
+
+            if (response.IsSuccess)
+            {
+                Snackbar.Add("Member removed successfully!", Severity.Success);
+                // Reload the guild data to refresh the members list
+                var reloadRequest = new GetGuildByIdRequest { Id = guildId };
+                var reloadResponse = await Mediator.Send(reloadRequest);
+
+                if (reloadResponse is not null)
+                {
+                    Guild = reloadResponse;
+                    Members = reloadResponse.Members?.Select(m => new GuildMembershipViewModel
+                    {
+                        PlayerId = m.PlayerId,
+                        PlayerName = m.Player?.Name ?? "Unknown",
+                        Nick = m.Nick,
+                        RankName = m.Rank?.Name ?? "Unknown"
+                    }).ToList() ?? new List<GuildMembershipViewModel>();
+                }
+                StateHasChanged();
+            }
+            else
+            {
+                Snackbar.Add($"Error removing member: {response.ErrorMessage}", Severity.Error);
+            }
+        }
     }
 
     public class GuildMembershipViewModel

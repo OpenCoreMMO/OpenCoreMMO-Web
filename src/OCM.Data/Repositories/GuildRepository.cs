@@ -23,7 +23,13 @@ public class GuildRepository : BaseRepository<GuildEntity>, IGuildRepository
     public async Task<IEnumerable<GuildEntity>> GetAll()
     {
         await using var context = NewDbContext;
-        return await context.Guilds.Include(x => x.Members).ThenInclude(x => x.Rank).ToListAsync();
+        return await context.Guilds
+            .Include(x => x.Owner)
+            .Include(x => x.Members)
+            .ThenInclude(x => x.Player)
+            .Include(x => x.Members)
+            .ThenInclude(x => x.Rank)
+            .ToListAsync();
     }
 
     public async Task<GuildEntity> GetByName(string name)
@@ -38,6 +44,8 @@ public class GuildRepository : BaseRepository<GuildEntity>, IGuildRepository
         return await context.Guilds
             .Include(x => x.Owner)
             .Include(x => x.Members)
+            .ThenInclude(x => x.Player)
+            .Include(x => x.Members)
             .ThenInclude(x => x.Rank)
             .FirstOrDefaultAsync(x => x.Id == id);
     }
@@ -50,8 +58,27 @@ public class GuildRepository : BaseRepository<GuildEntity>, IGuildRepository
             .Where(filter)
             .Include(x => x.Owner)
             .Include(x => x.Members)
+            .ThenInclude(x => x.Player)
+            .Include(x => x.Members)
+            .ThenInclude(x => x.Rank)
             .Skip(skip)
             .Take(limit)
             .ToListAsync();
+    }
+
+    public async Task<GuildMembershipEntity> GetMembershipAsync(int guildId, int playerId)
+    {
+        await using var context = NewDbContext;
+        return await context.GuildMemberships
+            .Include(x => x.Player)
+            .Include(x => x.Rank)
+            .FirstOrDefaultAsync(x => x.GuildId == guildId && x.PlayerId == playerId);
+    }
+
+    public async Task RemoveMembership(GuildMembershipEntity membership)
+    {
+        await using var context = NewDbContext;
+        context.GuildMemberships.Remove(membership);
+        await context.SaveChangesAsync();
     }
 }

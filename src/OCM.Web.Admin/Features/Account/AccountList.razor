@@ -32,18 +32,18 @@
                 }
             </MudTd>
             <MudTd align="right">
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mr-2" Href="@($"/accounts/{context.Id}")">
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" Class="mr-2" Href="@($"/accounts/{context.Id}")">
                     Edit
                 </MudButton>
                 @if (context.BanishedAt.HasValue)
                 {
-                    <MudButton Variant="Variant.Filled" Color="Color.Warning" OnClick="() => UnbanAccount(context.Id)">
+                    <MudButton Variant="Variant.Outlined" Color="Color.Warning" OnClick="() => UnbanAccount(context.Id)">
                         Unban
                     </MudButton>
                 }
                 else
                 {
-                    <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="() => BanAccount(context.Id)">
+                    <MudButton Variant="Variant.Outlined" Color="Color.Error" OnClick="() => BanAccount(context.Id)">
                         Ban
                     </MudButton>
                 }

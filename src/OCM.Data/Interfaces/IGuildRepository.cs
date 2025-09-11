@@ -10,4 +10,6 @@ public interface IGuildRepository : IBaseRepositoryNeo<GuildEntity>
     Task<GuildEntity> GetByName(string name);
     Task<GuildEntity> GetById(int id);
     Task<IEnumerable<GuildEntity>> GetPaginatedGuildsAsync(System.Linq.Expressions.Expression<System.Func<GuildEntity, bool>> filter, int page, int limit);
+    Task<GuildMembershipEntity> GetMembershipAsync(int guildId, int playerId);
+    Task RemoveMembership(GuildMembershipEntity membership);
 }

@@ -27,7 +27,7 @@
             <MudTd DataLabel="Bank Amount">@context.BankAmount.ToString("N0") gold</MudTd>
             <MudTd DataLabel="Created">@context.CreatedAt.ToString("yyyy-MM-dd")</MudTd>
             <MudTd align="right">
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mr-2" Href="@($"guilds/{context.Id}/edit")">
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" Class="mr-2" Href="@($"guilds/{context.Id}/edit")">
                     Edit
                 </MudButton>
             </MudTd>
