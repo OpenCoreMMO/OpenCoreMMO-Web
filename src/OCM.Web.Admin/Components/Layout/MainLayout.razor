@@ -1,6 +1,7 @@
 ﻿@using MudBlazor.Utilities
 @inherits LayoutComponentBase
 @inject ProgressBarState ProgressBarState
+@inject IJSRuntime JSRuntime
 
 @code{
 
@@ -30,6 +31,46 @@
         }
     };
 
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadThemeFromLocalStorage();
+        await base.OnInitializedAsync();
+        ProgressBarState.OnChange += () => { InvokeAsync(StateHasChanged); };
+    }
+
+    private async Task LoadThemeFromLocalStorage()
+    {
+        try
+        {
+            var storedTheme = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "theme");
+            if (!string.IsNullOrEmpty(storedTheme) && bool.TryParse(storedTheme, out var isDark))
+            {
+                IsDarkMode = isDark;
+            }
+        }
+        catch
+        {
+            // If localStorage is not available, use default
+        }
+    }
+
+    private async Task SaveThemeToLocalStorage()
+    {
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("localStorage.setItem", "theme", IsDarkMode.ToString());
+        }
+        catch
+        {
+            // If localStorage is not available, silently fail
+        }
+    }
+
+    private void OnThemeChanged()
+    {
+        _ = SaveThemeToLocalStorage(); // Fire and forget
+    }
+
 }
 
 <MudThemeProvider IsDarkMode="IsDarkMode" Theme="_theme"/>
@@ -41,7 +82,7 @@
         <MudImage Src="@LogoImage" Height="42" Style="margin-right: 15px"></MudImage>
         <MudText Typo="Typo.h6">Admin Dashboard</MudText>
         <MudSpacer/>
-        <MudSwitch @bind-Value="IsDarkMode" Class="ma-4" T="bool"
+        <MudSwitch @bind-Value="IsDarkMode" @bind-Value:after="OnThemeChanged" Class="ma-4" T="bool"
                    Color="@(IsDarkMode ? Color.Primary : Color.Dark)"
                    ThumbIconColor="@(IsDarkMode ? Color.Default : Color.Dark)"
                    ThumbIcon="@(IsDarkMode ? Icons.Material.Filled.LightMode : Icons.Material.Filled.DarkMode)"/>
@@ -88,10 +129,6 @@
         new("Players", "#")
     ];
 
-    protected override void OnInitialized()
-    {
-        ProgressBarState.OnChange += () => { InvokeAsync(StateHasChanged); };
-    }
 
     public void Dispose()
     {
