@@ -6,6 +6,7 @@ public static class ErrorMessage
     public static string AccountDoesNotExist => "Account does not exist.";
     public static string AccountAlreadyBanished => "Account already banished.";
     public static string AccountInvalidPassword => "Invalid password.";
+    public static string InvalidCredentials => "Invalid email or password.";
     public static string AccountNameAlreadyExist => "Account name already exist.";
     public static string PlayerAlreadyExist => "Player already exist.";
     public static string PlayerNameAlreadyExist => "Player name already exist.";

@@ -26,7 +26,8 @@ public class AccountRepository : BaseRepository<AccountEntity>, IAccountReposito
 
     #region gets
 
-    public async Task<IList<AccountEntity>> GetPaginatedAccountsAsync(Expression<Func<AccountEntity, bool>> filter, int page, int limit)
+    public async Task<IList<AccountEntity>> GetPaginatedAccountsAsync(Expression<Func<AccountEntity, bool>> filter,
+        int page, int limit)
     {
         await using var context = NewDbContext;
         var skip = (page - 1) * limit;
@@ -104,8 +105,8 @@ public class AccountRepository : BaseRepository<AccountEntity>, IAccountReposito
         await using var context = NewDbContext;
 
         return await context.Accounts
-            .Where(x => x.EmailAddress.ToLower().Equals(email.ToLower()) ||
-                        x.AccountName.ToLower().Equals(accountName.ToLower()))
+            .Where(x => (email != null && x.EmailAddress.ToLower().Equals(email.ToLower())) ||
+                        (accountName != null && x.AccountName.ToLower().Equals(accountName.ToLower())))
             .SingleOrDefaultAsync();
     }
 

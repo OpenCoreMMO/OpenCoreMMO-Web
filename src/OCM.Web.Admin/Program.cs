@@ -1,5 +1,4 @@
 using System.Net;
-using Microsoft.EntityFrameworkCore;
 using MudBlazor.Services;
 using NeoServer.Web.Admin;
 using OCM.Application.Requests.Validators;
@@ -25,6 +24,18 @@ builder.Services.AddMudServices();
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
+// Add authentication
+builder.Services.AddAuthentication("CustomAuth")
+    .AddCookie("CustomAuth", options =>
+    {
+        options.LoginPath = "/login";
+        options.AccessDeniedPath = "/login";
+    });
+
+builder.Services.AddAuthorization();
+builder.Services.AddControllers();
+builder.Services.AddCascadingAuthenticationState();
+
 builder.Services.AddServicesApi();
 builder.Services.AddAutoMapperProfiles(typeof(Program).Assembly);
 
@@ -34,8 +45,11 @@ builder.Services.AddRepositories();
 
 builder.Services.AddMediatR(config =>
 {
-    config.RegisterServicesFromAssembly(typeof(Program).Assembly);
-    config.RegisterServicesFromAssembly(typeof(OCM.Application.Requests.Queries.GetAccountsRequest).Assembly);
+    config.RegisterServicesFromAssemblies(
+        typeof(Program).Assembly,
+        typeof(OCM.Application.Requests.Queries.GetAccountsRequest).Assembly,
+        typeof(OCM.Application.UseCases.Commands.Account.LoginCommand).Assembly
+    );
     config.AddOpenBehavior(typeof(ValidationBehavior<,>));
 });
 
@@ -50,6 +64,14 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 builder.Services.AddCors();
 
 builder.Services.AddScoped<ProgressBarState>();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromHours(8);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
 
 var app = builder.Build();
 
@@ -68,11 +90,15 @@ app.UseCors(x => x
     .AllowAnyMethod()
     .AllowAnyHeader());
 
+app.UseAuthentication();
+app.UseAuthorization();
 app.UseAntiforgery();
 
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
+
+app.MapControllers();
 
 // Ensure database is created
 using (var scope = app.Services.CreateScope())

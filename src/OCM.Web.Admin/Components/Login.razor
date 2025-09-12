@@ -1,0 +1,128 @@
+@page "/login"
+@rendermode InteractiveServer
+@layout LoginLayout
+@using MediatR
+@using OCM.Application.UseCases.Commands.Account
+@inject IMediator Mediator
+@inject NavigationManager Navigation
+
+<PageTitle>Login - Admin Dashboard</PageTitle>
+
+<MudThemeProvider IsDarkMode="true"/>
+<MudDialogProvider/>
+<MudSnackbarProvider/>
+
+<div
+    style="display: flex; justify-content: center; align-items: center; min-height: 100vh; background: linear-gradient(135deg, #3b82f6 0%, #1e3a8a 50%, #0f172a 100%);">
+    <MudPaper Elevation="24"
+              Style="width: 400px; padding: 2rem; border-radius: 12px; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px); border: 1px solid rgba(71, 85, 105, 0.3);">
+        <div style="text-align: center; margin-bottom: 2rem;">
+            <MudImage Src="/Opencoremmo.png" Height="60" Style="margin-bottom: 1rem;"/>
+            <MudText Typo="Typo.h5" Color="Color.Default" Align="Align.Start" Style="font-weight: 600;">Welcome to OCM
+                Admin👋
+            </MudText>
+            <MudText Typo="Typo.body2" Color="Color.Info" Align="Align.Start">Please sign in to access the dashboard
+            </MudText>
+        </div>
+
+        <MudForm @ref="form" @bind-IsValid="@success" @bind-Errors="@errors">
+            <MudTextField @bind-Value="model.Email"
+                          Label="Email"
+                          Variant="Variant.Outlined"
+                          Required="true"
+                          RequiredError="Email is required"
+                          Style="margin-bottom: 1rem;"/>
+
+            <MudTextField @bind-Value="model.Password"
+                          Label="Password"
+                          Variant="Variant.Outlined"
+                          InputType="InputType.Password"
+                          Required="true"
+                          RequiredError="Password is required"
+                          Style="margin-bottom: 1.5rem;"/>
+
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <MudAlert Severity="Severity.Error" Style="margin-bottom: 1rem;">
+                    @errorMessage
+                </MudAlert>
+            }
+
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Info"
+                       Size="Size.Large"
+                       FullWidth="true"
+                       ButtonType="ButtonType.Button"
+                       @onclick="HandleLogin"
+                       Disabled="isLoading"
+                       Style="margin-bottom: 1rem;">
+                @if (isLoading)
+                {
+                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Style="margin-right: 0.5rem;"/>
+                }
+                Sign In
+            </MudButton>
+        </MudForm>
+    </MudPaper>
+</div>
+
+@code {
+    private LoginModel model = new();
+    private bool success;
+    private string[] errors = [];
+    private MudForm form;
+    private bool isLoading;
+    private string errorMessage;
+
+    public async Task HandleLogin()
+    {
+        await form.Validate();
+        StateHasChanged();
+
+        if (!success)
+            return;
+
+        isLoading = true;
+        errorMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            var command = new LoginCommand
+            {
+                Email = model.Email,
+                Password = model.Password
+            };
+
+            var result = await Mediator.Send(command);
+
+            if (result.IsSuccess)
+            {
+                //await AuthService.SignInAsync(model.Email, result.Identifier);
+                Navigation.NavigateTo($"/Account/Login?email={model.Email}&accountId={result.Identifier}", forceLoad: true);
+
+                //Navigation.NavigateTo("/");
+                return;
+            }
+
+            errorMessage = result.ErrorMessage ?? "Login failed. Please check your credentials.";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "An error occurred. Please try again.";
+            throw ex;
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    public class LoginModel
+    {
+        public string Email { get; set; }
+        public string Password { get; set; }
+    }
+
+}
