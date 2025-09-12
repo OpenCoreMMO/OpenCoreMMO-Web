@@ -6,11 +6,14 @@ namespace OCM.Application.Response.IpBans;
 public class IpBanResponseViewModel
 {
     public int Id { get; set; }
-    public string Ip { get; set; }
+    public string IpAddress { get; set; }
     public string Reason { get; set; }
-    public DateTime BannedAt { get; set; }
-    public DateTime ExpiresAt { get; set; }
-    public ushort BannedBy { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime? ExpiresAt { get; set; }
+    public uint? BannedById { get; set; }
+    public string BannedByName { get; set; }
+    public DateTime? DeletedAt { get; set; }
+    public bool IsActive { get; set; }
 
     public static implicit operator IpBanResponseViewModel(IpBanEntity entity)
     {
@@ -19,11 +22,14 @@ public class IpBanResponseViewModel
             : new IpBanResponseViewModel
             {
                 Id = entity.Id,
-                Ip = entity.Ip,
+                IpAddress = entity.Ip,
                 Reason = entity.Reason,
-                BannedAt = entity.BannedAt,
-                ExpiresAt = entity.ExpiresAt,
-                BannedBy = entity.BannedBy
+                CreatedAt = entity.BannedAt,
+                ExpiresAt = entity.ExpiresAt == DateTime.MaxValue ? null : entity.ExpiresAt,
+                BannedById = (uint?)entity.BannedBy,
+                BannedByName = "", // Will be populated in query
+                DeletedAt = entity.DeletedAt,
+                IsActive = entity.ExpiresAt > DateTime.UtcNow
             };
     }
 }

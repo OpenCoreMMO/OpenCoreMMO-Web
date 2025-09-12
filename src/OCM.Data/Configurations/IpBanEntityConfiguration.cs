@@ -32,6 +32,12 @@ public class IpBanEntityConfiguration : IEntityTypeConfiguration<IpBanEntity>
         builder.Property(b => b.BannedBy)
             .IsRequired();
 
+        builder.Property(b => b.DeletedAt)
+            .IsRequired(false);
+
+        builder.Property(b => b.DeletedBy)
+            .IsRequired(false);
+
         builder.HasIndex(b => b.Ip)
             .HasDatabaseName("IX_Bans_Ip");
 

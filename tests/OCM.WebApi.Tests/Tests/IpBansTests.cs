@@ -45,11 +45,11 @@ public class IpBansTests : BaseIntegrationTests
 
         //Assert
         Assert.NotNull(response);
-        Assert.Equal(ipBan.Ip, response.Ip);
+        Assert.Equal(ipBan.Ip, response.IpAddress);
         Assert.Equal(ipBan.Reason, response.Reason);
-        Assert.Equal(ipBan.BannedAt, response.BannedAt);
-        Assert.Equal(ipBan.BannedBy, response.BannedBy);
-        Assert.Equal(ipBan.ExpiresAt, response.ExpiresAt);
+        Assert.Equal(ipBan.BannedAt, response.CreatedAt);
+        Assert.Equal((uint)ipBan.BannedBy, response.BannedById.Value);
+        Assert.Equal(ipBan.ExpiresAt, response.ExpiresAt.Value);
     }
 
 

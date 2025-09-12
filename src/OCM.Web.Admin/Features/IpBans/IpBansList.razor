@@ -1,0 +1,296 @@
+@page "/ip-bans"
+@using OCM.Application.Requests.Queries
+@using OCM.Application.Requests.Commands
+@using OCM.Application.Response.IpBans
+@using OCM.Application.Response.Player
+@using MediatR
+@using MudBlazor
+
+<MudPaper Class="mx-auto mt-4" Elevation="2">
+    <div class="pa-4">
+        <MudText Typo="Typo.h6">IP Bans</MudText>
+        <MudText Typo="Typo.subtitle2" Color="Color.Secondary">List of all IP bans</MudText>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="OpenAddIpBanModal" Class="mt-2">Add Ip Ban</MudButton>
+    </div>
+
+    <!-- Filters Section -->
+    <MudCard Class="mx-0">
+        <MudCardContent>
+            <MudGrid>
+                <MudItem xs="12" sm="6" md="3">
+                    <MudTextField @bind-Value="filterIp" Label="IP Address" Variant="Variant.Outlined" Dense="true" />
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+                    <MudAutocomplete T="PlayerResponseViewModel"
+                                     Label="Banned By"
+                                     @bind-Value="selectedPlayer"
+                                     SearchFunc="SearchPlayers"
+                                     ToStringFunc="@(p => p?.Name ?? string.Empty)"
+                                     Variant="Variant.Outlined"
+                                     Dense="true"
+                                     Clearable="true"
+                                     ResetValueOnEmptyText="true" />
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+                    <MudDatePicker @bind-Date="filterCreatedFrom" Label="Created From" />
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+                    <MudDatePicker @bind-Date="filterCreatedTo" Label="Created To" />
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+                    <MudDatePicker @bind-Date="filterExpiresFrom" Label="Expires From" />
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+                    <MudDatePicker @bind-Date="filterExpiresTo" Label="Expires To" />
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+                    <MudSelect @bind-Value="filterStatus" Label="Status" Variant="Variant.Outlined">
+                        <MudSelectItem Value="@("all")">All</MudSelectItem>
+                        <MudSelectItem Value="@("active")">Active</MudSelectItem>
+                        <MudSelectItem Value="@("expired")">Expired</MudSelectItem>
+                        <MudSelectItem Value="@("deleted")">Deleted</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+            </MudGrid>
+
+            <!-- Filter Buttons at Bottom -->
+            <MudGrid Class="mt-4">
+                <MudItem xs="12" Class="d-flex justify-end gap-2">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ApplyFilters">Apply Filters</MudButton>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="ClearFilters">Clear Filters</MudButton>
+                </MudItem>
+            </MudGrid>
+        </MudCardContent>
+    </MudCard>
+
+    <MudTable T="IpBanResponseViewModel" @ref="table" ServerData="ServerReload" Dense="true" Hover="true" Bordered="false" Class="mt-4">
+        <HeaderContent>
+            <MudTh>ID</MudTh>
+            <MudTh>IP Address</MudTh>
+            <MudTh>Banned By</MudTh>
+            <MudTh>Reason</MudTh>
+            <MudTh>Created</MudTh>
+            <MudTh>Expires</MudTh>
+            <MudTh>Status</MudTh>
+            <MudTh align="right">Action</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="ID">@context.Id</MudTd>
+            <MudTd DataLabel="IP Address">@context.IpAddress</MudTd>
+            <MudTd DataLabel="Banned By">
+                @if (context.BannedById.HasValue)
+                {
+                    <MudLink Href="@($"/player/{context.BannedById}")" Color="Color.Primary" Underline="Underline.Always">
+                        @context.BannedByName
+                    </MudLink>
+                }
+                else
+                {
+                    @context.BannedByName
+                }
+            </MudTd>
+            <MudTd DataLabel="Reason">@context.Reason</MudTd>
+            <MudTd DataLabel="Created">@(context.CreatedAt.ToLocalTime().ToString("MMM dd, yyyy hh:mm tt"))</MudTd>
+            <MudTd DataLabel="Expires">@(context.ExpiresAt.HasValue ? context.ExpiresAt.Value.ToLocalTime().ToString("MMM dd, yyyy hh:mm tt") : "Permanent")</MudTd>
+            <MudTd DataLabel="Status">
+                <MudChip T="string" Color="@(context.DeletedAt != null ? Color.Error : context.IsActive ? Color.Warning : Color.Success)" Size="Size.Small">
+                    @(context.DeletedAt != null ? "Deleted" : context.IsActive ? "Active" : "Expired")
+                </MudChip>
+            </MudTd>
+            <MudTd align="right">
+                @if (context.DeletedAt == null && context.IsActive)
+                {
+                    <MudButton Variant="Variant.Outlined" Color="Color.Error" OnClick="() => UnbanIp(context.Id)">
+                        Unban IP
+                    </MudButton>
+                }
+            </MudTd>
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager />
+        </PagerContent>
+    </MudTable>
+</MudPaper>
+
+<MudDialog @bind-Visible="isAddDialogOpen" Options="dialogOptions">
+    <TitleContent>
+        <MudText Typo="Typo.h6">Add IP Ban</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="form" @bind-IsValid="@success">
+            <MudTextField @bind-Value="banIpRequest.Ip" Label="IP Address" Variant="Variant.Outlined" Required="true" RequiredError="IP address is required." Validation="@ValidateIPv4" />
+            <MudTextField @bind-Value="banIpRequest.Reason" Label="Reason" Variant="Variant.Outlined" Required="true" RequiredError="Reason is required." />
+            <MudNumericField @bind-Value="banIpRequest.Days" Label="Days" Min="1" Variant="Variant.Outlined" Required="true" RequiredError="Days is required." />
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="CancelAdd">Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="AddIpBan" Disabled="@(!success)">Ban</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+
+    [Inject] private IMediator Mediator { get; set; }
+    [Inject] private IDialogService DialogService { get; set; }
+    [Inject] private ISnackbar Snackbar { get; set; }
+
+    private MudTable<IpBanResponseViewModel> table;
+
+    // Filter properties
+    private PlayerResponseViewModel selectedPlayer;
+    private DateTime? filterCreatedFrom;
+    private DateTime? filterCreatedTo;
+    private DateTime? filterExpiresFrom;
+    private DateTime? filterExpiresTo;
+    private string filterStatus = "all";
+    private string filterIp = string.Empty;
+
+    // Add IP Ban modal properties
+    private bool isAddDialogOpen;
+    private BanIpRequest banIpRequest = new();
+    private DialogOptions dialogOptions = new() { CloseButton = true, MaxWidth = MaxWidth.Small };
+    private MudForm form;
+    private bool success;
+
+    private async Task<TableData<IpBanResponseViewModel>> ServerReload(TableState state, CancellationToken token)
+    {
+        var request = new GetIpBansRequest
+        {
+            IpAddress = string.IsNullOrWhiteSpace(filterIp) ? null : filterIp,
+            BannedById = selectedPlayer != null ? (uint?)selectedPlayer.Id : null,
+            CreatedFrom = filterCreatedFrom,
+            CreatedTo = filterCreatedTo,
+            ExpiresFrom = filterExpiresFrom,
+            ExpiresTo = filterExpiresTo,
+            Status = filterStatus,
+            Page = state.Page + 1,
+            Limit = state.PageSize
+        };
+
+        var response = await Mediator.Send(request, token);
+        return new TableData<IpBanResponseViewModel> { TotalItems = response.TotalRecords, Items = response.Data };
+    }
+
+    private async Task UnbanIp(int ipBanId)
+    {
+        var currentTable = table;
+
+        try
+        {
+            var result = await DialogService.ShowMessageBox(
+                "Confirm Unban IP",
+                "Are you sure you want to unban this IP address?",
+                yesText: "Unban",
+                cancelText: "Cancel");
+
+            if (result == true)
+            {
+                var unbanRequest = new UnbanIpRequest();
+                unbanRequest.SetIpBanId(ipBanId);
+
+                var response = await Mediator.Send(unbanRequest);
+
+                if (response.IsSuccess)
+                {
+                    Snackbar.Add("IP ban removed successfully!", Severity.Success);
+                    if (currentTable != null)
+                    {
+                        await currentTable.ReloadServerData();
+                    }
+                    StateHasChanged();
+                }
+                else
+                {
+                    Snackbar.Add($"Error unbanning IP: {response.ErrorMessage}", Severity.Error);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Unexpected error: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task ApplyFilters()
+    {
+        await table.ReloadServerData();
+    }
+
+    private async Task ClearFilters()
+    {
+        selectedPlayer = null;
+        filterCreatedFrom = null;
+        filterCreatedTo = null;
+        filterExpiresFrom = null;
+        filterExpiresTo = null;
+        filterStatus = "all";
+        filterIp = string.Empty;
+        await table.ReloadServerData();
+    }
+
+    private async Task<IEnumerable<PlayerResponseViewModel>> SearchPlayers(string searchTerm, CancellationToken token)
+    {
+        if (string.IsNullOrWhiteSpace(searchTerm) || searchTerm.Length < 2)
+            return new List<PlayerResponseViewModel>();
+
+        var request = new SearchPlayersRequest
+        {
+            SearchTerm = searchTerm,
+            MaxResults = 10
+        };
+
+        var players = await Mediator.Send(request, token);
+        return players;
+    }
+
+    private void OpenAddIpBanModal()
+    {
+        isAddDialogOpen = true;
+    }
+
+    private void CancelAdd()
+    {
+        isAddDialogOpen = false;
+        banIpRequest = new BanIpRequest();
+    }
+
+    private IEnumerable<string> ValidateIPv4(string ip)
+    {
+        if (string.IsNullOrWhiteSpace(ip))
+            yield break;
+
+        // IPv4 regex pattern
+        var ipv4Pattern = @"^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$";
+
+        if (!System.Text.RegularExpressions.Regex.IsMatch(ip, ipv4Pattern))
+        {
+            yield return "Please enter a valid IPv4 address (e.g., 192.168.1.1)";
+        }
+    }
+
+    private async Task AddIpBan()
+    {
+        await form.Validate();
+
+        if (!success)
+        {
+            return;
+        }
+
+        var response = await Mediator.Send(banIpRequest);
+
+        if (response.IsSuccess)
+        {
+            Snackbar.Add("IP banned successfully!", Severity.Success);
+            await table.ReloadServerData();
+            isAddDialogOpen = false;
+            banIpRequest = new BanIpRequest();
+        }
+        else
+        {
+            Snackbar.Add($"Error banning IP: {response.ErrorMessage}", Severity.Error);
+        }
+    }
+
+}
