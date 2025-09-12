@@ -1,7 +1,6 @@
 ﻿using FluentValidation;
 using OCM.Application.Requests.Commands;
 using System.Net;
-using System.Text.RegularExpressions;
 
 namespace OCM.Application.Requests.Validators;
 

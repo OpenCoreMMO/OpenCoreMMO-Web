@@ -1,22 +1,24 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
+using OCM.Infrastructure.Interfaces;
 
 namespace OCM.Web.Admin.Controllers;
 
 // AccountController.cs
 [ApiController]
 [Route("[controller]")]
-public class AccountController : Controller
+public class AccountController(IAccountRepository accountRepository) : Controller
 {
     [HttpGet("Login")]
     public async Task<IActionResult> Login(string email, int accountId)
     {
+        var account = await accountRepository.GetById(accountId);
         var claims = new List<Claim>
         {
             new(ClaimTypes.Email, email),
             new(ClaimTypes.NameIdentifier, accountId.ToString()),
-            new(ClaimTypes.Name, email)
+            new(ClaimTypes.Name, account.AccountName),
         };
 
         var claimsIdentity = new ClaimsIdentity(claims, "CustomAuth");
@@ -32,5 +34,12 @@ public class AccountController : Controller
             authProperties);
             
         return Redirect("/"); // Redirect back to Blazor app
+    }
+
+    [HttpPost("Logout")]
+    public async Task<IActionResult> Logout()
+    {
+        await HttpContext.SignOutAsync("CustomAuth");
+        return Redirect("/login");
     }
 }

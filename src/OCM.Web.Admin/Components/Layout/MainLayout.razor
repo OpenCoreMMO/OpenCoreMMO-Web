@@ -2,6 +2,7 @@
 @inherits LayoutComponentBase
 @inject ProgressBarState ProgressBarState
 @inject IJSRuntime JSRuntime
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 @code{
 
@@ -71,6 +72,16 @@
         _ = SaveThemeToLocalStorage(); // Fire and forget
     }
 
+    private string GetUserInitial(string? userName)
+    {
+        if (string.IsNullOrEmpty(userName))
+            return "?";
+
+        return userName.Length >= 2
+            ? userName.Substring(0, 2).ToUpper()
+            : userName.Substring(0, 1).ToUpper();
+    }
+
 }
 
 <MudThemeProvider IsDarkMode="IsDarkMode" Theme="_theme"/>
@@ -87,7 +98,14 @@
                    ThumbIconColor="@(IsDarkMode ? Color.Default : Color.Dark)"
                    ThumbIcon="@(IsDarkMode ? Icons.Material.Filled.LightMode : Icons.Material.Filled.DarkMode)"/>
 
-        <MudAvatar Color="Color.Info" Variant="Variant.Filled">CV</MudAvatar>
+        <AuthorizeView>
+            <Authorized>
+                <MudAvatar Color="Color.Info" Variant="Variant.Filled">@GetUserInitial(context.User.Identity?.Name)</MudAvatar>
+            </Authorized>
+            <NotAuthorized>
+                <MudAvatar Color="Color.Info" Variant="Variant.Filled">?</MudAvatar>
+            </NotAuthorized>
+        </AuthorizeView>
     </MudAppBar>
 
     <MudDrawer id="nav-drawer" @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="2">

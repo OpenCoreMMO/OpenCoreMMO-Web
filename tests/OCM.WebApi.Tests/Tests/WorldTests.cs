@@ -7,7 +7,6 @@ using OCM.Application.Response.Player;
 using OCM.Application.Response.World;
 using OCM.Infrastructure.Entities;
 using Xunit;
-using Type = System.Type;
 
 namespace NeoServer.WebApi.Tests.Tests;
 

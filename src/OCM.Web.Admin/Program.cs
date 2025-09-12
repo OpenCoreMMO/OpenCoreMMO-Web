@@ -35,6 +35,7 @@ builder.Services.AddAuthentication("CustomAuth")
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 builder.Services.AddCascadingAuthenticationState();
+builder.Services.AddAntiforgery();
 
 builder.Services.AddServicesApi();
 builder.Services.AddAutoMapperProfiles(typeof(Program).Assembly);

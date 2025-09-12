@@ -19,4 +19,5 @@ public interface IAccountRepository : IBaseRepositoryNeo<AccountEntity>
     Task<int> Ban(uint accountId, string reason, uint bannedByAccountId);
     Task<AccountEntity> GetByEmailOrAccountName(string email, string accountName);
     Task<IList<AccountEntity>> GetPaginatedAccountsAsync(Expression<Func<AccountEntity, bool>> filter, int page, int limit);
+    Task<AccountEntity> GetById(int accountId);
 }

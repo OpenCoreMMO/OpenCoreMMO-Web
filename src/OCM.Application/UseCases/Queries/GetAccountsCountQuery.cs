@@ -1,6 +1,5 @@
 using MediatR;
 using OCM.Application.Requests.Queries;
-using OCM.Infrastructure.Entities;
 using OCM.Infrastructure.Interfaces;
 
 namespace OCM.Application.UseCases.Queries;

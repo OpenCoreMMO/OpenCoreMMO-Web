@@ -109,6 +109,15 @@ public class AccountRepository : BaseRepository<AccountEntity>, IAccountReposito
                         (accountName != null && x.AccountName.ToLower().Equals(accountName.ToLower())))
             .SingleOrDefaultAsync();
     }
+    
+    public async Task<AccountEntity> GetById(int accountId)
+    {
+        await using var context = NewDbContext;
+
+        return await context.Accounts
+            .Where(x => x.Id == accountId)
+            .SingleOrDefaultAsync();
+    }
 
     #endregion
 
