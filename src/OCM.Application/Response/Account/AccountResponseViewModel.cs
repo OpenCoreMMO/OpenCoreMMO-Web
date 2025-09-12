@@ -6,8 +6,10 @@ namespace OCM.Application.Response.Account;
 public class AccountResponseViewModel
 {
     public int Id { get; set; }
+    public string AccountName { get; set; }
     public string Email { get; set; }
     public string Password { get; set; }
+    public DateTime CreatedAt { get; set; }
     public int PageAccess { get; set; }
     public int Type { get; set; }
     public int PremiumDays { get; set; }
@@ -24,8 +26,10 @@ public class AccountResponseViewModel
             : new AccountResponseViewModel
             {
                 Id = entity.Id,
+                AccountName = entity.AccountName,
                 Email = entity.EmailAddress,
                 Password = entity.Password,
+                CreatedAt = entity.CreatedAt,
                 PageAccess = 0, // todo: implement
                 Type = 0, // todo: implement
                 PremiumDays = entity.PremiumTimeEndAt.HasValue

@@ -9,6 +9,7 @@ public class PlayerResponseViewModel
 {
     public int Id { get; set; }
     public int AccountId { get; set; }
+    public string AccountName { get; set; }
     public int TownId { get; set; }
     public string Name { get; set; }
     public byte Group { get; set; }
@@ -189,6 +190,7 @@ public class PlayerResponseViewModel
             {
                 Id = entity.Id,
                 AccountId = entity.AccountId,
+                AccountName = entity.Account?.AccountName ?? "Unknown",
                 TownId = entity.TownId,
                 Name = entity.Name,
                 Group = entity.Group,
