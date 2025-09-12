@@ -136,31 +136,66 @@
         return new TableData<BugReportResponseViewModel> { TotalItems = response.TotalRecords, Items = response.Data };
     }
 
-    private async Task CloseBugReport(long bugReportId)
+    private async Task CloseBugReport(int bugReportId)
     {
-        var result = await DialogService.ShowMessageBox(
-            "Confirm Close Bug Report",
-            "Are you sure you want to close this bug report?",
-            yesText: "Close",
-            cancelText: "Cancel");
+        Console.WriteLine($"[DEBUG] CloseBugReport started for ID: {bugReportId}");
+        var currentTable = table;
 
-        if (result == true)
+        try
         {
-            var closeRequest = new CloseBugRequest();
-            closeRequest.SetBugReportId(bugReportId);
+            Console.WriteLine("[DEBUG] Showing dialog...");
+            var result = await DialogService.ShowMessageBox(
+                "Confirm Close Bug Report",
+                "Are you sure you want to close this bug report?",
+                yesText: "Close",
+                cancelText: "Cancel");
 
-            var response = await Mediator.Send(closeRequest);
+            Console.WriteLine($"[DEBUG] Dialog result: {result}");
 
-            if (response.IsSuccess)
+            if (result == true)
             {
-                Snackbar.Add("Bug report closed successfully!", Severity.Success);
-                await table.ReloadServerData();
+                Console.WriteLine("[DEBUG] Preparing CloseBugRequest...");
+                var closeRequest = new CloseBugRequest();
+                closeRequest.SetBugReportId(bugReportId);
+
+                Console.WriteLine("[DEBUG] Sending MediatR request...");
+                var response = await Mediator.Send(closeRequest);
+                Console.WriteLine($"[DEBUG] MediatR response received: IsSuccess={response.IsSuccess}");
+
+                if (response.IsSuccess)
+                {
+                    Snackbar.Add("Bug report closed successfully!", Severity.Success);
+                    Console.WriteLine("[DEBUG] Reloading table data...");
+                    if (currentTable != null)
+                    {
+                        await currentTable.ReloadServerData();
+                        Console.WriteLine("[DEBUG] Table reload completed");
+                    }
+                    else
+                    {
+                        Console.WriteLine("[DEBUG] Table reference is null");
+                    }
+                    StateHasChanged();
+                }
+                else
+                {
+                    Snackbar.Add($"Error closing bug report: {response.ErrorMessage}", Severity.Error);
+                    Console.WriteLine($"[DEBUG] MediatR failed: {response.ErrorMessage}");
+                }
             }
             else
             {
-                Snackbar.Add($"Error closing bug report: {response.ErrorMessage}", Severity.Error);
+                Console.WriteLine("[DEBUG] Dialog cancelled");
             }
         }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[DEBUG] Exception in CloseBugReport: {ex.Message}");
+            Console.WriteLine($"[DEBUG] Stack trace: {ex.StackTrace}");
+            Snackbar.Add($"Unexpected error: {ex.Message}", Severity.Error);
+        }
+
+        Console.WriteLine("[DEBUG] CloseBugReport completed");
     }
 
     private async Task ApplyFilters()

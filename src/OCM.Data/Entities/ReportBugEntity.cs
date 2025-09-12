@@ -4,7 +4,7 @@ namespace OCM.Infrastructure.Entities;
 
 public sealed class ReportBugEntity
 {
-    public long Id { get; set; }
+    public int Id { get; set; }
     public uint PlayerId { get; set; }
     public string Reason { get; set; }
 

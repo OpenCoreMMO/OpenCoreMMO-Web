@@ -10,7 +10,7 @@ public class CloseBugCommand(IReportBugRepository reportBugRepository) : IReques
 {
     public async Task<OutputResponse> Handle(CloseBugRequest request, CancellationToken cancellationToken)
     {
-        var bugReport = await reportBugRepository.GetAsync((int)request.BugReportId);
+        var bugReport = await reportBugRepository.GetAsync(request.BugReportId);
 
         if (bugReport == null)
             return new OutputResponse(ErrorMessage.BugReportNotFound);

@@ -5,7 +5,7 @@ namespace OCM.Application.Response.BugReports;
 [Serializable]
 public class BugReportResponseViewModel
 {
-    public long Id { get; set; }
+    public int Id { get; set; }
     public uint PlayerId { get; set; }
     public string PlayerName { get; set; }
     public string Reason { get; set; }

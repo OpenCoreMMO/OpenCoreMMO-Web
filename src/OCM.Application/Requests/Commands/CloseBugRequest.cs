@@ -5,9 +5,9 @@ namespace OCM.Application.Requests.Commands;
 
 public class CloseBugRequest : IRequest<OutputResponse>, ICommandBase
 {
-    public long BugReportId { get; private set; }
+    public int BugReportId { get; private set; }
 
-    public void SetBugReportId(long bugReportId)
+    public void SetBugReportId(int bugReportId)
     {
         BugReportId = bugReportId;
     }

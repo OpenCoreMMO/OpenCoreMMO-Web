@@ -101,6 +101,16 @@ public class BaseRepository<TEntity> : IBaseRepositoryNeo<TEntity>
         return await entity.FindAsync(id);
     }
 
+    /// <summary>
+    ///     This method is responsible for get entity by long ID.
+    /// </summary>
+    public async Task<TEntity> GetAsync(long id)
+    {
+        await using var context = NewDbContext;
+        var entity = context.Set<TEntity>();
+        return await entity.FindAsync(id);
+    }
+
     public async Task<int> CountAllAsync(Expression<Func<TEntity, bool>> filter)
     {
         await using var context = NewDbContext;
