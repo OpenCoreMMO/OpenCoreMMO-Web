@@ -3,6 +3,7 @@
 @inject ProgressBarState ProgressBarState
 @inject IJSRuntime JSRuntime
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
 
 @code{
 
@@ -37,6 +38,8 @@
         await LoadThemeFromLocalStorage();
         await base.OnInitializedAsync();
         ProgressBarState.OnChange += () => { InvokeAsync(StateHasChanged); };
+        NavigationManager.LocationChanged += OnLocationChanged;
+        UpdateBreadcrumbs(NavigationManager.Uri);
     }
 
     private async Task LoadThemeFromLocalStorage()
@@ -80,6 +83,34 @@
         return userName.Length >= 2
             ? userName.Substring(0, 2).ToUpper()
             : userName.Substring(0, 1).ToUpper();
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        UpdateBreadcrumbs(e.Location);
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void UpdateBreadcrumbs(string uri)
+    {
+        var relativePath = NavigationManager.ToBaseRelativePath(uri);
+        if (string.IsNullOrEmpty(relativePath))
+        {
+            _items = new List<BreadcrumbItem> { new("Home", "/") };
+            return;
+        }
+
+        var segments = relativePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        _items = new List<BreadcrumbItem> { new("Home", "/") };
+
+        string currentPath = "/";
+        foreach (var segment in segments)
+        {
+            currentPath += segment + "/";
+            var displayName = System.Globalization.CultureInfo.CurrentCulture.TextInfo
+                .ToTitleCase(segment.Replace("-", " ").Replace("_", " "));
+            _items.Add(new BreadcrumbItem(displayName, currentPath.TrimEnd('/')));
+        }
     }
 
 }
@@ -141,16 +172,13 @@
 @code {
     private bool _drawerOpen = true;
 
-    private readonly List<BreadcrumbItem> _items =
-    [
-        new("Home", "#"),
-        new("Players", "#")
-    ];
+    private List<BreadcrumbItem> _items = new();
 
 
     public void Dispose()
     {
         ProgressBarState.OnChange -= StateHasChanged;
+        NavigationManager.LocationChanged -= OnLocationChanged;
     }
 
     private void DrawerToggle()

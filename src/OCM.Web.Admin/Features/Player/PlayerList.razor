@@ -28,7 +28,7 @@
         </HeaderContent>
         <RowTemplate>
             <MudTd>
-                <MudLink Typo="Typo.subtitle2" Href="@($"Player/{context.Id}")"
+                <MudLink Typo="Typo.subtitle2" Href="@($"Players/{context.Id}")"
                           Style="text-decoration:none; color:inherit;">@context.Name</MudLink>
                 <MudText Typo="Typo.body2">@context.VocationName</MudText>
             </MudTd>
@@ -40,7 +40,7 @@
                 </MudChip>
             </MudTd>
             <MudTd>
-                <MudButton Variant="Variant.Outlined" Color="Color.Primary" Href="@($"Player/{context.Id}")">
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" Href="@($"Players/{context.Id}")">
                     Edit
                 </MudButton>
                 <MudButton Variant="Variant.Outlined" Color="Color.Warning">
