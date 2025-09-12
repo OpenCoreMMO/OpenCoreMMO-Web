@@ -17,10 +17,10 @@
     <MudCard Class="mx-0">
         <MudCardContent>
             <MudGrid>
-                <MudItem xs="12" sm="6" md="3">
+                <MudItem xs="12" sm="6" md="4">
                     <MudTextField @bind-Value="filterIp" Label="IP Address" Variant="Variant.Outlined" Dense="true" />
                 </MudItem>
-                <MudItem xs="12" sm="6" md="3">
+                <MudItem xs="12" sm="6" md="4">
                     <MudAutocomplete T="PlayerResponseViewModel"
                                      Label="Banned By"
                                      @bind-Value="selectedPlayer"
@@ -30,6 +30,14 @@
                                      Dense="true"
                                      Clearable="true"
                                      ResetValueOnEmptyText="true" />
+                </MudItem>
+                <MudItem xs="12" sm="6" md="4">
+                    <MudSelect @bind-Value="filterStatus" Label="Status" Variant="Variant.Outlined">
+                        <MudSelectItem Value="@("all")">All</MudSelectItem>
+                        <MudSelectItem Value="@("active")">Active</MudSelectItem>
+                        <MudSelectItem Value="@("expired")">Expired</MudSelectItem>
+                        <MudSelectItem Value="@("deleted")">Deleted</MudSelectItem>
+                    </MudSelect>
                 </MudItem>
                 <MudItem xs="12" sm="6" md="3">
                     <MudDatePicker @bind-Date="filterCreatedFrom" Label="Created From" />
@@ -42,14 +50,6 @@
                 </MudItem>
                 <MudItem xs="12" sm="6" md="3">
                     <MudDatePicker @bind-Date="filterExpiresTo" Label="Expires To" />
-                </MudItem>
-                <MudItem xs="12" sm="6" md="3">
-                    <MudSelect @bind-Value="filterStatus" Label="Status" Variant="Variant.Outlined">
-                        <MudSelectItem Value="@("all")">All</MudSelectItem>
-                        <MudSelectItem Value="@("active")">Active</MudSelectItem>
-                        <MudSelectItem Value="@("expired")">Expired</MudSelectItem>
-                        <MudSelectItem Value="@("deleted")">Deleted</MudSelectItem>
-                    </MudSelect>
                 </MudItem>
             </MudGrid>
 
