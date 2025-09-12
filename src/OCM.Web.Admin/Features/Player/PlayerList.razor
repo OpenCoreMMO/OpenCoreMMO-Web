@@ -4,6 +4,7 @@
 @using OCM.Application.Requests.Queries
 @using OCM.Application.Response
 @using OCM.Application.Response.Player
+@using OCM.Application.Helpers
 @inject IMediator Mediator
 @inject ProgressBarState ProgressBarState
 
@@ -28,8 +29,8 @@
         <RowTemplate>
             <MudTd>
                 <MudLink Typo="Typo.subtitle2" Href="@($"Player/{context.Id}")"
-                         Style="text-decoration:none; color:inherit;">@context.Name</MudLink>
-                <MudText Typo="Typo.body2">Paladin</MudText>
+                          Style="text-decoration:none; color:inherit;">@context.Name</MudLink>
+                <MudText Typo="Typo.body2">@context.VocationName</MudText>
             </MudTd>
             <MudTd>@context.Level</MudTd>
             <MudTd>@context.Group</MudTd>

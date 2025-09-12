@@ -1,5 +1,6 @@
 ﻿using OCM.Infrastructure.Entities;
 using OCM.Infrastructure.Models;
+using OCM.Application.Helpers;
 
 namespace OCM.Application.Response.Player;
 
@@ -80,22 +81,7 @@ public class PlayerResponseViewModel
 
     private static string GetVocationName(byte vocation)
     {
-        return vocation switch
-        {
-            0 => "None",
-            1 => "Sorcerer",
-            2 => "Druid",
-            3 => "Paladin",
-            4 => "Knight",
-            5 => "Master Sorcerer",
-            6 => "Elder Druid",
-            7 => "Royal Paladin",
-            8 => "Elite Knight",
-            9 => "Sorcerer",
-            10 => "Druid",
-            11 => "Paladin",
-            _ => "Unknown"
-        };
+        return VocationConstants.GetVocationName(vocation);
     }
 
     private static string GetGroupName(byte group)
