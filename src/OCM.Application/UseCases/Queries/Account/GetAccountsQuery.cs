@@ -15,7 +15,12 @@ public class GetAccountsQuery(IAccountRepository accountRepository)
         GetAccountsRequest request, CancellationToken cancellationToken)
     {
         Expression<Func<AccountEntity, bool>> expression = item =>
-            (string.IsNullOrEmpty(request.Email) || item.EmailAddress.ToLower().Contains(request.Email.ToLower()));
+            (string.IsNullOrEmpty(request.Email) || item.EmailAddress.ToLower().Contains(request.Email.ToLower())) &&
+            (string.IsNullOrEmpty(request.Name) || item.AccountName.ToLower().Contains(request.Name.ToLower())) &&
+            (!request.RoleId.HasValue || item.RoleId == request.RoleId.Value) &&
+            (string.IsNullOrEmpty(request.Status) ||
+             (request.Status == "Banned" && item.BanishedAt.HasValue) ||
+             (request.Status == "Active" && !item.BanishedAt.HasValue));
 
         var totalAccounts = await accountRepository.CountAllAsync(expression);
         var accounts = await accountRepository.GetPaginatedAccountsAsync(expression, request.Page, request.Limit);

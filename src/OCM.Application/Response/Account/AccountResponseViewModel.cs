@@ -18,6 +18,8 @@ public class AccountResponseViewModel
     public DateTime? BanishedEndAt { get; set; }
     public string BanishmentReason { get; set; }
     public uint? BannedBy { get; set; }
+    public string RoleName { get; set; }
+    public int RoleId { get; set; }
 
     public static implicit operator AccountResponseViewModel(AccountEntity entity)
     {
@@ -39,7 +41,9 @@ public class AccountResponseViewModel
                 BanishedAt = entity.BanishedAt,
                 BanishedEndAt = entity.BanishedEndAt,
                 BanishmentReason = entity.BanishmentReason,
-                BannedBy = entity.BannedBy
+                BannedBy = entity.BannedBy,
+                RoleName = entity.Role?.Name ?? "No Role",
+                RoleId = entity.RoleId
             };
     }
 }

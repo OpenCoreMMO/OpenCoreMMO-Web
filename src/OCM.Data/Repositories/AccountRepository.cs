@@ -34,6 +34,7 @@ public class AccountRepository : BaseRepository<AccountEntity>, IAccountReposito
         return await context.Accounts
             .Where(filter)
             .Include(x => x.Players)
+            .Include(x => x.Role)
             .Skip(skip)
             .Take(limit)
             .ToListAsync();
@@ -105,6 +106,7 @@ public class AccountRepository : BaseRepository<AccountEntity>, IAccountReposito
         await using var context = NewDbContext;
 
         return await context.Accounts
+            .Include(x => x.Role)
             .Where(x => (email != null && x.EmailAddress.ToLower().Equals(email.ToLower())) ||
                         (accountName != null && x.AccountName.ToLower().Equals(accountName.ToLower())))
             .SingleOrDefaultAsync();

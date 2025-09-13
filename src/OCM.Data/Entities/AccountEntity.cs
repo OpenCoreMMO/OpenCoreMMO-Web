@@ -25,6 +25,8 @@ public sealed class AccountEntity
 
     public ICollection<PlayerEntity> Players { get; set; }
     public ICollection<AccountVipListEntity> VipList { get; set; }
+    public int RoleId { get; set; } = 1; // Default to Player role
+    public RoleEntity Role { get; set; }
 
     public DateTime CreatedAt { get; set; }
 

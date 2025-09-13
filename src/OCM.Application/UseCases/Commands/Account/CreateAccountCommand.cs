@@ -26,7 +26,8 @@ public class CreateAccountCommand(IAccountRepository accountRepository)
             CreatedAt = DateTime.UtcNow,
             EmailAddress = request.Email,
             AccountName = request.AccountName,
-            Coins = request.Coins
+            Coins = request.Coins,
+            RoleId = request.RoleId
         };
 
         await accountRepository.Insert(account);

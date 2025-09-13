@@ -1,7 +1,12 @@
 ﻿namespace OCM.Application.Response;
 
 [Serializable]
-public class BaseResponseViewModel
+public class BaseResponseViewModel<T>
 {
-    public object Data { get; set; }
+    public BaseResponseViewModel(T data)
+    {
+        Data = data;
+    }
+
+    public T Data { get; set; }
 }

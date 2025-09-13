@@ -43,6 +43,8 @@ public class NeoContext : DbContext
 
     public DbSet<ReportBugEntity> ReportBugs { get; set; }
 
+    public DbSet<RoleEntity> Roles { get; set; }
+
     public DbSet<HouseEntity> Houses { get; set; }
     public DbSet<HouseListEntity> HouseList { get; set; }
 
@@ -92,6 +94,7 @@ public class NeoContext : DbContext
         modelBuilder.ApplyConfiguration(new PlayerStorageEntityConfiguration());
         modelBuilder.ApplyConfiguration(new IpBanEntityConfiguration());
         modelBuilder.ApplyConfiguration(new ReportBugEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new RoleEntityConfiguration());
         modelBuilder.ApplyConfiguration(new HouseEntityConfiguration());
         modelBuilder.ApplyConfiguration(new HouseListEntityConfiguration());
 

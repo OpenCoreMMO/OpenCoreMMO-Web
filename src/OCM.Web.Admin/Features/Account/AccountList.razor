@@ -2,27 +2,69 @@
 @using OCM.Application.Requests.Queries
 @using OCM.Application.Requests.Commands
 @using OCM.Application.Response.Account
+@using OCM.Application.Response
 @using MediatR
+@using Microsoft.AspNetCore.Components.Authorization
 
 <PageTitle>Accounts</PageTitle>
 
 <MudPaper Class="mx-auto mt-4" Elevation="2">
     <div class="pa-4">
-        <MudText Typo="Typo.h6">Accounts</MudText>
-        <MudText Typo="Typo.subtitle2" Color="Color.Secondary">List of all created accounts</MudText>
+        <div class="d-flex justify-space-between align-center">
+            <div>
+                <MudText Typo="Typo.h6">Accounts</MudText>
+                <MudText Typo="Typo.subtitle2" Color="Color.Secondary">List of all created accounts</MudText>
+            </div>
+            @if (IsAdministrator)
+            {
+                <MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="OpenCreateDialog">
+                    <MudIcon Icon="@Icons.Material.Filled.Add" Class="mr-2" />
+                    New Account
+                </MudButton>
+            }
+        </div>
+    </div>
+    <div class="pa-4">
+        <MudGrid>
+            <MudItem xs="12" sm="4">
+                <MudTextField @bind-Value="filterName" Label="Name" />
+            </MudItem>
+            <MudItem xs="12" sm="4">
+                <MudSelect T="int?" @bind-Value="filterRoleId" Label="Role">
+                    <MudSelectItem Value="@((int?)null)">All</MudSelectItem>
+                    @foreach (var role in AvailableRoles)
+                    {
+                        <MudSelectItem Value="@((int?)role.Id)">@role.Name</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" sm="4">
+                <MudSelect @bind-Value="filterStatus" Label="Status">
+                    <MudSelectItem Value="@((string)null)">All</MudSelectItem>
+                    <MudSelectItem Value="@("Active")">Active</MudSelectItem>
+                    <MudSelectItem Value="@("Banned")">Banned</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+        </MudGrid>
+        <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="ApplyFilters" Class="mt-2 mr-2">
+            Apply Filters
+        </MudButton>
+        <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="ClearFilters" Class="mt-2">
+            Clear Filters
+        </MudButton>
     </div>
     <MudTable T="AccountResponseViewModel" @key="reloadKey" ServerData="ServerReload" Dense="true" Hover="true" Bordered="false" Class="mt-4">
         <HeaderContent>
             <MudTh>#</MudTh>
             <MudTh>Name</MudTh>
-            <MudTh>Page Access</MudTh>
+            <MudTh>Role</MudTh>
             <MudTh>Status</MudTh>
             <MudTh align="right">Action</MudTh>
         </HeaderContent>
         <RowTemplate>
             <MudTd DataLabel="#">@context.Id</MudTd>
-            <MudTd DataLabel="Name">@context.Email</MudTd>
-            <MudTd DataLabel="Page Access">@context.PageAccess</MudTd>
+            <MudTd DataLabel="Name">@context.AccountName</MudTd>
+            <MudTd DataLabel="Role">@context.RoleName</MudTd>
             <MudTd DataLabel="Status">
                 <MudChip T="string" Color="Color.Success" Variant="Variant.Filled" Class="mr-2">Premium Account
                 </MudChip>
@@ -54,7 +96,61 @@
         <MudTablePager />
     </PagerContent>
     </MudTable>
+
+    <!-- Create Account Dialog -->
+    <MudDialog @bind-Visible="isCreateDialogOpen" Options="dialogOptions">
+        <TitleContent>
+            <MudText Typo="Typo.h6">Create New Account</MudText>
+        </TitleContent>
+        <DialogContent>
+            <MudForm @ref="createForm" @bind-IsValid="@createSuccess" ValidationDelay="0">
+                <MudGrid>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="newAccount.AccountName" Label="Username"
+                                      Required="true" RequiredError="Username is required!"
+                                      Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="newAccount.Email" Label="Email Address"
+                                      Required="true" RequiredError="Email is required!"
+                                      Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="newAccount.Password" Label="Password"
+                                      InputType="InputType.Password" Required="true"
+                                      RequiredError="Password is required!" Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudSelect T="int" Label="Role" @bind-Value="newAccount.RoleId"
+                                   Required="true" RequiredError="Role is required!"
+                                   Variant="Variant.Outlined">
+                            @foreach (var role in AvailableRoles)
+                            {
+                                <MudSelectItem Value="@role.Id">@role.Name</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudNumericField @bind-Value="newAccount.Coins" Label="Coins"
+                                         Min="0" Variant="Variant.Outlined" />
+                    </MudItem>
+                </MudGrid>
+            </MudForm>
+        </DialogContent>
+        <DialogActions>
+            <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="CloseCreateDialog">
+                Cancel
+            </MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                       OnClick="CreateAccount" Disabled="!createSuccess">
+                <MudIcon Icon="@Icons.Material.Filled.Save" Class="mr-2" />
+                Create Account
+            </MudButton>
+        </DialogActions>
+    </MudDialog>
 </MudPaper>
+
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 @code {
 
@@ -62,11 +158,60 @@
     [Inject] private IDialogService DialogService { get; set; }
     [Inject] private ISnackbar Snackbar { get; set; }
 
+    private bool IsAdministrator { get; set; }
+
+    private string filterName;
+    private int? filterRoleId;
+    private string filterStatus;
+
     private int reloadKey = 0;
+
+    // Create Account Dialog
+    private bool isCreateDialogOpen = false;
+    private MudForm createForm;
+    private bool createSuccess;
+    private CreateAccountRequest newAccount = new() { RoleId = 1, Coins = 0 };
+    private List<RoleResponseViewModel> AvailableRoles { get; set; } = new();
+    private readonly DialogOptions dialogOptions = new() { MaxWidth = MaxWidth.Medium, FullWidth = true };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUserRole();
+        await LoadRoles();
+    }
+
+    private async Task LoadUserRole()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        IsAdministrator = user.IsInRole("Administrator");
+    }
+
+    private void ApplyFilters()
+    {
+        reloadKey++;
+        StateHasChanged();
+    }
+
+    private void ClearFilters()
+    {
+        filterName = null;
+        filterRoleId = null;
+        filterStatus = null;
+        reloadKey++;
+        StateHasChanged();
+    }
 
     private async Task<TableData<AccountResponseViewModel>> ServerReload(TableState state, CancellationToken token)
     {
-        var request = new GetAccountsRequest { Page = state.Page + 1, Limit = state.PageSize };
+        var request = new GetAccountsRequest
+        {
+            Page = state.Page + 1,
+            Limit = state.PageSize,
+            Name = filterName,
+            RoleId = filterRoleId,
+            Status = filterStatus
+        };
         var response = await Mediator.Send(request, token);
         return new TableData<AccountResponseViewModel> { TotalItems = response.TotalRecords, Items = response.Data };
     }
@@ -126,6 +271,59 @@
             {
                 Snackbar.Add($"Error unbanning account: {response.ErrorMessage}", Severity.Error);
             }
+        }
+    }
+
+    private async Task OpenCreateDialog()
+    {
+        await LoadRoles();
+        newAccount = new CreateAccountRequest { RoleId = 1, Coins = 0 };
+        createSuccess = false;
+        isCreateDialogOpen = true;
+    }
+
+    private void CloseCreateDialog()
+    {
+        isCreateDialogOpen = false;
+        newAccount = new CreateAccountRequest { RoleId = 1, Coins = 0 };
+        createSuccess = false;
+    }
+
+    private async Task LoadRoles()
+    {
+        try
+        {
+            var request = new GetRolesRequest();
+            var response = await Mediator.Send(request);
+            AvailableRoles = response.Data;
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading roles: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task CreateAccount()
+    {
+        try
+        {
+            var response = await Mediator.Send(newAccount);
+
+            if (response.IsSuccess)
+            {
+                Snackbar.Add("Account created successfully!", Severity.Success);
+                reloadKey++;
+                StateHasChanged();
+                CloseCreateDialog();
+            }
+            else
+            {
+                Snackbar.Add($"Failed to create account: {response.ErrorMessage}", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error creating account: {ex.Message}", Severity.Error);
         }
     }
 

@@ -12,4 +12,5 @@ public class UpdateAccountRequest : IRequest<OutputResponse>
     public int Type { get; set; }
     public int PremiumDays { get; set; }
     public int Coins { get; set; }
+    public int RoleId { get; set; }
 }

@@ -32,6 +32,12 @@ public class LoginCommandHandler(IAccountRepository accountRepository) : IReques
             return new OutputResponse(ErrorMessage.InvalidCredentials);
         }
 
+        // Check if account has sufficient permissions (RoleId != 1 means not a basic Player)
+        if (account.RoleId == 1)
+        {
+            return new OutputResponse(ErrorMessage.InsufficientPermissions);
+        }
+
         // For now, return success with account ID
         return new OutputResponse(account.Id);
     }

@@ -36,9 +36,12 @@
             <MudTextField @bind-Value="model.Password"
                           Label="Password"
                           Variant="Variant.Outlined"
-                          InputType="InputType.Password"
+                          InputType="@(passwordVisible ? InputType.Text : InputType.Password)"
                           Required="true"
                           RequiredError="Password is required"
+                          Adornment="Adornment.End"
+                          AdornmentIcon="@(passwordVisible ? Icons.Material.Filled.VisibilityOff : Icons.Material.Filled.Visibility)"
+                          OnAdornmentClick="TogglePasswordVisibility"
                           Style="margin-bottom: 1.5rem;"/>
 
             @if (!string.IsNullOrEmpty(errorMessage))
@@ -73,6 +76,7 @@
     private MudForm form;
     private bool isLoading;
     private string errorMessage;
+    private bool passwordVisible;
 
     public async Task HandleLogin()
     {
@@ -117,6 +121,11 @@
             isLoading = false;
             StateHasChanged();
         }
+    }
+
+    private void TogglePasswordVisibility()
+    {
+        passwordVisible = !passwordVisible;
     }
 
     public class LoginModel

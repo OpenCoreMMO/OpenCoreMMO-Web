@@ -46,6 +46,14 @@ public class AccountEntityConfiguration : IEntityTypeConfiguration<AccountEntity
             .WithOne()
             .HasForeignKey(x => x.AccountId);
 
+        builder.Property(e => e.RoleId)
+            .HasDefaultValue(1); // Default to Player role
+
+        builder.HasOne(e => e.Role)
+            .WithMany(r => r.Accounts)
+            .HasForeignKey(e => e.RoleId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         builder.Property(e => e.BanishedAt);
 
         builder.Property(e => e.BanishmentReason).HasMaxLength(500);
@@ -66,7 +74,8 @@ public class AccountEntityConfiguration : IEntityTypeConfiguration<AccountEntity
                 Password = "1",
                 PremiumTimeEndAt = DateTime.UtcNow.AddDays(30),
                 AllowManyOnline = true,
-                AccountName = "GOD"
+                AccountName = "GOD",
+                RoleId = 4 // Administrator role
             }
         );
     }

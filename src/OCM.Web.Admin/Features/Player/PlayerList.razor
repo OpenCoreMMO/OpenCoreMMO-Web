@@ -10,66 +10,60 @@
 
 @rendermode @(new InteractiveServerRenderMode(false))
 
-@if (Players?.Data is not null)
-{
-    <MudTable Items="Players?.Data" RowsPerPage="5" Bordered="true" Hover="true" Elevation="3">
-        <ToolBarContent>
-            <div>
-                <MudText Typo="Typo.h6">Players</MudText>
-                <MudText Typo="Typo.subtitle2" Color="Color.Secondary">List of all created players</MudText>
-            </div>
-        </ToolBarContent>
-        <HeaderContent>
-            <MudTh>Name</MudTh>
-            <MudTh>Level</MudTh>
-            <MudTh>Group</MudTh>
-            <MudTh>Online</MudTh>
-            <MudTd></MudTd>
-        </HeaderContent>
-        <RowTemplate>
-            <MudTd>
-                <MudLink Typo="Typo.subtitle2" Href="@($"Players/{context.Id}")"
-                          Style="text-decoration:none; color:inherit;">@context.Name</MudLink>
-                <MudText Typo="Typo.body2">@context.VocationName</MudText>
-            </MudTd>
-            <MudTd>@context.Level</MudTd>
-            <MudTd>@context.Group</MudTd>
-            <MudTd>
-                <MudChip T="string" Color="@(context.Online ? Color.Success : Color.Error)">
-                    @(context.Online ? "Online" : "Offline")
-                </MudChip>
-            </MudTd>
-            <MudTd>
-                <MudButton Variant="Variant.Outlined" Color="Color.Primary" Href="@($"Players/{context.Id}")">
-                    Edit
-                </MudButton>
-                <MudButton Variant="Variant.Outlined" Color="Color.Warning">
-                    Logout
-                </MudButton>
-            </MudTd>
-        </RowTemplate>
-    </MudTable>
-}
+<MudTable ServerData="ServerReload" Dense="true" Hover="true" Bordered="false" Class="mt-4">
+    <ToolBarContent>
+        <div>
+            <MudText Typo="Typo.h6">Players</MudText>
+            <MudText Typo="Typo.subtitle2" Color="Color.Secondary">List of all created players</MudText>
+        </div>
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh>Name</MudTh>
+        <MudTh>Level</MudTh>
+        <MudTh>Group</MudTh>
+        <MudTh>Online</MudTh>
+        <MudTd></MudTd>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd>
+            <MudLink Typo="Typo.subtitle2" Href="@($"Players/{context.Id}")"
+                      Style="text-decoration:none; color:inherit;">@context.Name</MudLink>
+            <MudText Typo="Typo.body2">@context.VocationName</MudText>
+        </MudTd>
+        <MudTd>@context.Level</MudTd>
+        <MudTd>@context.Group</MudTd>
+        <MudTd>
+            <MudChip T="string" Color="@(context.Online ? Color.Success : Color.Error)">
+                @(context.Online ? "Online" : "Offline")
+            </MudChip>
+        </MudTd>
+        <MudTd>
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" Href="@($"Players/{context.Id}")">
+                Edit
+            </MudButton>
+            <MudButton Variant="Variant.Outlined" Color="Color.Warning">
+                Logout
+            </MudButton>
+        </MudTd>
+    </RowTemplate>
+    <PagerContent>
+        <MudTablePager />
+    </PagerContent>
+</MudTable>
 
 @code {
-
-    private BasePagedResponseViewModel<IEnumerable<PlayerResponseViewModel>> Players { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
         ProgressBarState.Show();
-
-        await LoadPlayers();
-
         ProgressBarState.Hide();
     }
 
-    private async Task LoadPlayers()
+    private async Task<TableData<PlayerResponseViewModel>> ServerReload(TableState state, CancellationToken token)
     {
-        Players = await Mediator.Send(new GetPlayersRequest
-        {
-            Limit = 10
-        });
+        var request = new GetPlayersRequest { Page = state.Page + 1, Limit = state.PageSize };
+        var response = await Mediator.Send(request, token);
+        return new TableData<PlayerResponseViewModel> { TotalItems = response.TotalRecords, Items = response.Data };
     }
 
 }

@@ -4,6 +4,7 @@
 @using OCM.Application.Requests.Commands
 @using OCM.Application.Response.Player
 @using OCM.Application.Response.Account
+@using OCM.Application.Response
 @inject IMediator Mediator
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
@@ -71,28 +72,17 @@
             <MudTextField Label="Password" @bind-Value="Account.Password" InputType="InputType.Password"
                           Variant="Variant.Outlined"/>
 
-            <MudGrid Class="mt-2">
-                <MudItem xs="6">
-                    <MudSelect T="int" Label="Page Access" @bind-Value="Account.PageAccess" Variant="Variant.Outlined">
-                        @for (var i = 0; i <= 5; i++)
-                        {
-                            <MudSelectItem Value="@i">@i</MudSelectItem>
-                        }
-                    </MudSelect>
-                </MudItem>
-                <MudItem xs="6">
-                    <MudSelect T="int" Label="Type" @bind-Value="Account.Type" Variant="Variant.Outlined">
-                        @for (var i = 0; i <= 5; i++)
-                        {
-                            <MudSelectItem Value="@i">@i</MudSelectItem>
-                        }
-                    </MudSelect>
-                </MudItem>
-            </MudGrid>
 
             <MudTextField Label="Premium Days" @bind-Value="Account.PremiumDays" Class="mt-4"
                           Variant="Variant.Outlined"/>
             <MudTextField Label="Coins" @bind-Value="Account.Coins" Variant="Variant.Outlined"/>
+
+            <MudSelect T="int" Label="Role" @bind-Value="Account.RoleId" Variant="Variant.Outlined" Class="mt-4" Required="true" RequiredError="Role is required">
+                @foreach (var role in AvailableRoles)
+                {
+                    <MudSelectItem Value="@role.Id">@role.Name</MudSelectItem>
+                }
+            </MudSelect>
 
             <MudButton Class="mt-6" Variant="Variant.Filled" Color="Color.Primary" FullWidth="true"
                        OnClick="SaveChanges">
@@ -109,11 +99,14 @@
 @code {
     [Parameter] public int AccountId { get; set; }
 
-    private AccountResponseViewModel Account { get; set; } = new AccountResponseViewModel();
+    private AccountResponseViewModel Account { get; set; } = new AccountResponseViewModel { RoleId = 1 };
+    private IEnumerable<RoleResponseViewModel> AvailableRoles { get; set; } = new List<RoleResponseViewModel>();
 
     protected override async Task OnInitializedAsync()
     {
+        await LoadRoles();
         await LoadAccount();
+        StateHasChanged();
     }
 
     private async Task LoadAccount()
@@ -128,6 +121,19 @@
 
         var response = await Mediator.Send(request);
         Account = response.Data.FirstOrDefault(a => a.Id == AccountId);
+
+        // Ensure RoleId has a valid value
+        if (Account != null && Account.RoleId == 0)
+        {
+            Account.RoleId = 1; // Default to first role
+        }
+    }
+
+    private async Task LoadRoles()
+    {
+        var request = new GetRolesRequest();
+        var response = await Mediator.Send(request);
+        AvailableRoles = response.Data;
     }
 
     private async Task<TableData<PlayerResponseViewModel>> ServerReload(TableState state, CancellationToken token)
@@ -174,10 +180,9 @@
             Id = AccountId,
             Email = Account.Email,
             Password = Account.Password,
-            PageAccess = Account.PageAccess,
-            Type = Account.Type,
             PremiumDays = Account.PremiumDays,
-            Coins = Account.Coins
+            Coins = Account.Coins,
+            RoleId = Account.RoleId
         };
 
         var response = await Mediator.Send(request);

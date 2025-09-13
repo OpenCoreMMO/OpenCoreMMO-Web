@@ -40,6 +40,9 @@ public class UpdateAccountCommand(IAccountRepository accountRepository)
         // These might need to be stored in separate tables or calculated fields
         // For now, we'll skip updating these as they may require additional business logic
 
+        // Update role (required field)
+        account.RoleId = request.RoleId;
+
         await accountRepository.Update(account);
 
         return new OutputResponse();
