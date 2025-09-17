@@ -13,7 +13,7 @@
 <MudSnackbarProvider/>
 
 <div
-    style="display: flex; justify-content: center; align-items: center; min-height: 100vh; background: linear-gradient(135deg, #3b82f6 0%, #1e3a8a 50%, #0f172a 100%);">
+    style="display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #000000;">
     <MudPaper Elevation="24"
               Style="width: 400px; padding: 2rem; border-radius: 12px; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px); border: 1px solid rgba(71, 85, 105, 0.3);">
         <div style="text-align: center; margin-bottom: 2rem;">
@@ -31,6 +31,7 @@
                           Variant="Variant.Outlined"
                           Required="true"
                           RequiredError="Email is required"
+                          @onkeydown="HandleKeyDown"
                           Style="margin-bottom: 1rem;"/>
 
             <MudTextField @bind-Value="model.Password"
@@ -42,6 +43,7 @@
                           Adornment="Adornment.End"
                           AdornmentIcon="@(passwordVisible ? Icons.Material.Filled.VisibilityOff : Icons.Material.Filled.Visibility)"
                           OnAdornmentClick="TogglePasswordVisibility"
+                          @onkeydown="HandleKeyDown"
                           Style="margin-bottom: 1.5rem;"/>
 
             @if (!string.IsNullOrEmpty(errorMessage))
@@ -126,6 +128,14 @@
     private void TogglePasswordVisibility()
     {
         passwordVisible = !passwordVisible;
+    }
+
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await HandleLogin();
+        }
     }
 
     public class LoginModel
