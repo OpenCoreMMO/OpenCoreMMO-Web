@@ -1,0 +1,274 @@
+@page "/profile"
+@using MediatR
+@using Microsoft.AspNetCore.Components.Authorization
+@using OCM.Application.Response.Account
+@using Microsoft.AspNetCore.Components.Web
+@using OCM.Application.UseCases.Commands.Account
+@inject IMediator Mediator
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject ISnackbar Snackbar
+
+<PageTitle>Profile - Admin Dashboard</PageTitle>
+
+<div class="pa-4">
+    <MudPaper Class="mx-auto mt-4" Elevation="2">
+        <div class="pa-4">
+            <div class="d-flex justify-space-between align-center">
+                <div>
+                    <MudText Typo="Typo.h6">Profile Information</MudText>
+                    <MudText Typo="Typo.subtitle2" Color="Color.Secondary">View and manage your account details</MudText>
+                </div>
+            </div>
+        </div>
+        <MudCard>
+            <MudCardContent>
+                @if (isLoading)
+                {
+                    <MudProgressCircular Indeterminate="true" Size="Size.Large" Class="d-flex justify-center" />
+                }
+                else if (profile != null)
+                {
+                    <MudGrid>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="profile.AccountName"
+                                          Label="Username"
+                                          ReadOnly="true"
+                                          Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="profile.Email"
+                                          Label="Email Address"
+                                          ReadOnly="true"
+                                          Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="profile.RoleName"
+                                          Label="Role"
+                                          ReadOnly="true"
+                                          Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="profile.Coins"
+                                          Label="Coins"
+                                          ReadOnly="true"
+                                          Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField Value="@profile.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss")"
+                                          Label="Created At"
+                                          ReadOnly="true"
+                                          Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            @if (profile.BanishedAt.HasValue)
+                            {
+                                <MudChip T="string" Color="Color.Error" Variant="Variant.Filled">Banned</MudChip>
+                            }
+                            else
+                            {
+                                <MudChip T="string" Color="Color.Success" Variant="Variant.Filled">Active</MudChip>
+                            }
+                        </MudItem>
+                    </MudGrid>
+                }
+                else
+                {
+                    <MudText Typo="Typo.body1" Color="Color.Error">Failed to load profile information.</MudText>
+                }
+            </MudCardContent>
+        </MudCard>
+
+        <MudCard Class="mt-4">
+            <div class="pa-4">
+                <MudText Typo="Typo.h6">Change Password</MudText>
+                <MudText Typo="Typo.subtitle2" Color="Color.Secondary">Update your account password</MudText>
+            </div>
+            <MudCardContent>
+                <MudForm @ref="passwordForm" @bind-IsValid="@passwordSuccess" ValidationDelay="0">
+                    <MudGrid>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="changePassword.CurrentPassword"
+                                          Label="Current Password"
+                                          InputType="@(showCurrentPassword ? InputType.Text : InputType.Password)"
+                                          Required="true"
+                                          RequiredError="Current password is required"
+                                          Variant="Variant.Outlined"
+                                          Adornment="Adornment.End"
+                                          AdornmentIcon="@(showCurrentPassword ? Icons.Material.Filled.VisibilityOff : Icons.Material.Filled.Visibility)"
+                                          OnAdornmentClick="() => showCurrentPassword = !showCurrentPassword" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="changePassword.NewPassword"
+                                          Label="New Password"
+                                          InputType="@(showNewPassword ? InputType.Text : InputType.Password)"
+                                          Required="true"
+                                          RequiredError="New password is required"
+                                          Variant="Variant.Outlined"
+                                          Adornment="Adornment.End"
+                                          AdornmentIcon="@(showNewPassword ? Icons.Material.Filled.VisibilityOff : Icons.Material.Filled.Visibility)"
+                                          OnAdornmentClick="() => showNewPassword = !showNewPassword" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="changePassword.ConfirmPassword"
+                                          Label="Confirm New Password"
+                                          InputType="@(showConfirmPassword ? InputType.Text : InputType.Password)"
+                                          Required="true"
+                                          RequiredError="Password confirmation is required"
+                                          Variant="Variant.Outlined"
+                                          Adornment="Adornment.End"
+                                          AdornmentIcon="@(showConfirmPassword ? Icons.Material.Filled.VisibilityOff : Icons.Material.Filled.Visibility)"
+                                          OnAdornmentClick="() => showConfirmPassword = !showConfirmPassword" />
+                        </MudItem>
+                    </MudGrid>
+                    @if (!string.IsNullOrEmpty(passwordSuccessMessage))
+                    {
+                        <MudAlert Severity="Severity.Success" Class="mt-3">
+                            @passwordSuccessMessage
+                        </MudAlert>
+                    }
+                    @if (!string.IsNullOrEmpty(passwordError))
+                    {
+                        <MudAlert Severity="Severity.Error" Class="mt-3">
+                            @passwordError
+                        </MudAlert>
+                    }
+                </MudForm>
+            </MudCardContent>
+            <MudCardActions>
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           OnClick="ChangePassword"
+                           Disabled="!passwordSuccess || isChangingPassword">
+                    @if (isChangingPassword)
+                    {
+                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                    }
+                    Change Password
+                </MudButton>
+            </MudCardActions>
+        </MudCard>
+    </MudPaper>
+</div>
+
+@code {
+    private AccountResponseViewModel profile;
+    private bool isLoading = true;
+
+    private ChangePasswordModel changePassword = new();
+    private bool passwordSuccess;
+    private string passwordError;
+    private string passwordSuccessMessage;
+    private MudForm passwordForm;
+    private bool isChangingPassword;
+    private bool showCurrentPassword;
+    private bool showNewPassword;
+    private bool showConfirmPassword;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadProfile();
+    }
+
+    private async Task LoadProfile()
+    {
+        try
+        {
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+
+            if (user.Identity?.IsAuthenticated != true)
+            {
+                Navigation.NavigateTo("/login");
+                return;
+            }
+
+            var accountIdClaim = user.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier");
+            if (accountIdClaim == null || !int.TryParse(accountIdClaim.Value, out var accountId))
+            {
+                Snackbar.Add("Unable to retrieve account information.", Severity.Error);
+                return;
+            }
+
+            // For now, we'll create a mock profile since we don't have a specific GetAccountById query
+            // In a real implementation, you'd call a mediator command to get the account details
+            profile = new AccountResponseViewModel
+            {
+                Id = accountId,
+                AccountName = user.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name")?.Value ?? "Unknown",
+                Email = user.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress")?.Value ?? "Unknown",
+                RoleName = "Administrator", // This should come from the account data
+                Coins = 0, // This should come from the account data
+                CreatedAt = DateTime.Now, // This should come from the account data
+                BanishedAt = null
+            };
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading profile: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task ChangePassword()
+    {
+        await passwordForm.Validate();
+        StateHasChanged();
+
+        if (!passwordSuccess)
+            return;
+
+        if (changePassword.NewPassword != changePassword.ConfirmPassword)
+        {
+            passwordError = "New password and confirmation do not match.";
+            return;
+        }
+
+        isChangingPassword = true;
+        passwordError = null;
+        StateHasChanged();
+
+        try
+        {
+            var command = new ChangePasswordCommand
+            {
+                AccountId = profile.Id,
+                CurrentPassword = changePassword.CurrentPassword,
+                NewPassword = changePassword.NewPassword
+            };
+            var result = await Mediator.Send(command);
+
+            if (result.IsSuccess)
+            {
+                passwordSuccessMessage = "Password changed successfully!";
+                changePassword = new ChangePasswordModel();
+                passwordSuccess = false;
+            }
+            else
+            {
+                passwordError = result.ErrorMessage ?? "Failed to change password.";
+            }
+        }
+        catch (Exception ex)
+        {
+            passwordError = "An error occurred while changing the password.";
+            Snackbar.Add($"Error changing password: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isChangingPassword = false;
+            StateHasChanged();
+        }
+    }
+
+    public class ChangePasswordModel
+    {
+        public string CurrentPassword { get; set; }
+        public string NewPassword { get; set; }
+        public string ConfirmPassword { get; set; }
+    }
+}
