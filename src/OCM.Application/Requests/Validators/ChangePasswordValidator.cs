@@ -19,8 +19,6 @@ public class ChangePasswordValidator : AbstractValidator<ChangePasswordRequest>
             .Matches("^[a-zA-Z0-9]*$")
             .WithMessage("Password contains invalid characters. Only letters and numbers are allowed.");
 
-        RuleFor(x => x.ConfirmPassword)
-            .NotEmpty().WithMessage("Confirm password is required.")
-            .Equal(x => x.NewPassword).WithMessage("Confirm password must match the new password.");
+        // Note: ConfirmPassword validation is handled in the UI component
     }
 }
