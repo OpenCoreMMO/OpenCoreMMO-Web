@@ -158,8 +158,7 @@ public class AccountTests : BaseIntegrationTests
         var requestModel = new ChangePasswordRequest
         {
             OldPassword = accountEntity.Password,
-            NewPassword = "1234567890908mV",
-            ConfirmPassword = "1234567890908mV"
+            NewPassword = "1234567890908mV"
         };
 
 
@@ -183,8 +182,7 @@ public class AccountTests : BaseIntegrationTests
         var requestModel = new ChangePasswordRequest
         {
             OldPassword = "wrongpassword",
-            NewPassword = "1234567890908mV",
-            ConfirmPassword = "1234567890908mV"
+            NewPassword = "1234567890908mV"
         };
 
 
